@@ -1,0 +1,346 @@
+{
+  "tts_enabled": {
+    "description": "启用语音合成",
+    "hint": "关闭后插件不生成语音。",
+    "type": "bool",
+    "default": true
+  },
+  "text_voice_output": {
+    "description": "文字与语音同时输出",
+    "hint": "开启后同时发送文字和语音；关闭后仅发送语音。",
+    "type": "bool",
+    "default": true
+  },
+  "siliconflow_prompt_template": {
+    "description": "硅基流动 提示词模板",
+    "type": "text",
+    "default": "# 语音风格控制\n\n你的回复会被语音播报给用户。\n\n## 用法\n在句首加风格标签控制语气，标签必须大写：\n- {tag_example}今天天气真不错\n- 不加标签的句子以自然语气读出\n\n## 原则\n- 大部分时候自然写就行，语音会自动调整节奏\n- 只在情绪明显突变时才加标签\n- 简短回应（好的、嗯）不需要标签\n\n## 可用风格\n{style_list}",
+    "hint": "注入到系统提示词中，引导对话模型使用风格标签。可用变量：{tag_example}（标签示例）、{style_list}（风格列表）。",
+    "editor_mode": true,
+    "editor_mode_fullscreen": true,
+    "editor_language": "markdown",
+    "editor_theme": "vs-dark"
+  },
+  "minimax_prompt_template": {
+    "description": "MiniMax 提示词模板",
+    "type": "text",
+    "default": "# 语音风格控制\n\n你的回复会被语音播报给用户。\n\n## 用法\n在句首加风格标签控制语气：\n- {tag_example}今天天气真不错\n- 不加标签的句子以自然语气读出\n\n## 额外能力\n- 语气词：(laughs) (sighs) (gasps) (whispers) (cries) (hmm) (oh) (wow)\n- 停顿：<#数字#>（数字越大停顿越久）\n\n## 原则\n- 大部分时候自然写就行，语音会自动调整节奏\n- 只在情绪明显突变时才加标签\n- 简短回应（好的、嗯）不需要标签\n\n## 可用风格\n{style_list}",
+    "hint": "注入到系统提示词中，引导对话模型使用风格标签。可用变量：{tag_example}（标签示例）、{style_list}（风格列表）。",
+    "editor_mode": true,
+    "editor_mode_fullscreen": true,
+    "editor_language": "markdown",
+    "editor_theme": "vs-dark"
+  },
+  "mimo_prompt_template": {
+    "description": "小米 Mimo 提示词模板",
+    "type": "text",
+    "default": "# 语音风格控制\n\n你的回复会被语音播报给用户。语音模型会根据文本内容自动推断语气和情感，不需要你用标签来标注情绪。\n\n**不要使用情绪标签**（如开心、悲伤、愤怒），语音模型从文字本身就能理解情绪。\n\n只有当文字本身无法传达的效果，才可以视情况加入音频标签：\n{audio_tags}\n\n用法：在句首或句中用括号包裹 → (叹气)唉…… → (小声)应该没问题 → (紧张，深呼吸)冷静\n\n绝大多数时候不需要任何标签，自然写就行。",
+    "hint": "可用变量：{audio_tags}（音频标签列表）。",
+    "editor_mode": true,
+    "editor_mode_fullscreen": true,
+    "editor_language": "markdown",
+    "editor_theme": "vs-dark"
+  },
+  "mimo_audio_tags": {
+    "description": "Mimo 可用音频标签",
+    "type": "list",
+    "default": ["吸气", "深呼吸", "叹气", "长叹一口气", "喘息", "屏息", "笑", "轻笑", "大笑", "冷笑", "抽泣", "呜咽", "哽咽", "嚎啕大哭", "悄悄话"],
+    "hint": "只有这些标签会出现在提示词中，告诉对话模型可以使用。可根据需要增减。"
+  },
+  "timeout": {
+    "description": "请求超时(秒)",
+    "type": "float",
+    "default": 30.0
+  },
+  "max_retries": {
+    "description": "最大重试次数",
+    "type": "int",
+    "default": 2
+  },
+  "cooldown": {
+    "description": "冷却时间(秒)",
+    "hint": "两次语音合成之间的最小间隔。0 表示不限制。",
+    "type": "float",
+    "default": 0.0
+  },
+  "text_min_limit": {
+    "description": "最小文本长度",
+    "hint": "文本长度低于此值时不生成语音。",
+    "type": "int",
+    "default": 2
+  },
+  "text_limit": {
+    "description": "最大文本长度",
+    "hint": "文本长度超过此值时不生成语音。0 表示不限制。",
+    "type": "int",
+    "default": 500
+  },
+  "umo_persona_map": {
+    "description": "UMO 人格映射",
+    "hint": "键为 UMO（统一消息来源），值为人格配置序号。未匹配时使用默认人格。高级功能，一般无需配置。",
+    "type": "object",
+    "items": {},
+    "default": {}
+  },
+  "providers": {
+    "description": "TTS 提供商",
+    "hint": "在此添加 TTS 提供商，每个人格引用提供商 ID。先添加提供商，再在人格配置中引用。",
+    "type": "template_list",
+    "templates": {
+      "siliconflow": {
+        "name": "硅基流动",
+        "description": "SiliconFlow TTS（CosyVoice2），支持 <|HAPPY|> 风格标签",
+        "items": {
+          "id": {
+            "type": "string",
+            "description": "提供商 ID（唯一）",
+            "default": "siliconflow"
+          },
+          "provider_type": {
+            "type": "string",
+            "description": "提供商类型（勿改）",
+            "default": "siliconflow",
+            "obvious_hint": true
+          },
+          "api_url": {
+            "type": "string",
+            "description": "API URL",
+            "hint": "默认：https://api.siliconflow.cn/v1",
+            "default": "https://api.siliconflow.cn/v1"
+          },
+          "api_key": {
+            "type": "string",
+            "description": "API Key",
+            "default": "",
+            "obvious_hint": true
+          },
+          "model": {
+            "type": "string",
+            "description": "模型名称",
+            "default": "FunAudioLLM/CosyVoice2-0.5B"
+          },
+          "voice": {
+            "type": "string",
+            "description": "默认音色",
+            "default": "alex"
+          },
+          "format": {
+            "type": "string",
+            "description": "音频格式",
+            "options": ["mp3", "wav", "pcm", "opus"],
+            "default": "mp3"
+          },
+          "speed": {
+            "type": "float",
+            "description": "语速",
+            "hint": "0.5-2.0，默认 1.0",
+            "default": 1.0
+          },
+          "gain": {
+            "type": "float",
+            "description": "增益",
+            "default": 0.0
+          },
+          "sample_rate": {
+            "type": "int",
+            "description": "采样率",
+            "default": 44100
+          },
+          "pool": {
+            "description": "风格池",
+            "type": "object",
+            "items": {
+              "basic_emotions": {
+                "description": "基础情绪",
+                "type": "list",
+                "default": ["HAPPY", "SAD", "ANGRY", "FEARFUL", "SURPRISED", "DISGUSTED", "NEUTRAL", "EXCITED"]
+              },
+              "custom_styles": {
+                "description": "自定义风格",
+                "type": "list",
+                "hint": "在基础情绪基础上追加的风格标签。如：SHY, WHISPER, GENTLE",
+                "default": []
+              }
+            }
+          }
+        }
+      },
+      "minimax": {
+        "name": "MiniMax",
+        "description": "MiniMax TTS（speech-2.8），支持 emotion 字段 + 语气词标签",
+        "items": {
+          "id": {
+            "type": "string",
+            "description": "提供商 ID（唯一）",
+            "default": "minimax"
+          },
+          "provider_type": {
+            "type": "string",
+            "description": "提供商类型（勿改）",
+            "default": "minimax",
+            "obvious_hint": true
+          },
+          "api_url": {
+            "type": "string",
+            "description": "API URL",
+            "hint": "默认：https://api.minimaxi.com/v1/t2a_v2",
+            "default": "https://api.minimaxi.com/v1/t2a_v2"
+          },
+          "api_key": {
+            "type": "string",
+            "description": "API Key",
+            "default": "",
+            "obvious_hint": true
+          },
+          "model": {
+            "type": "string",
+            "description": "模型名称",
+            "options": ["speech-2.8-hd", "speech-2.8-turbo", "speech-01-turbo", "speech-01-tycoon"],
+            "default": "speech-2.8-turbo"
+          },
+          "voice_id": {
+            "type": "string",
+            "description": "音色 ID",
+            "default": "male-qn-qingse"
+          },
+          "speed": {
+            "type": "float",
+            "description": "语速",
+            "default": 1.0
+          },
+          "vol": {
+            "type": "float",
+            "description": "音量",
+            "default": 1.0
+          },
+          "pitch": {
+            "type": "int",
+            "description": "音调",
+            "default": 0
+          },
+          "format": {
+            "type": "string",
+            "description": "音频格式",
+            "options": ["mp3", "wav", "flac", "pcm"],
+            "default": "mp3"
+          },
+          "sample_rate": {
+            "type": "int",
+            "description": "采样率",
+            "default": 32000
+          },
+          "proxy": {
+            "type": "string",
+            "description": "代理地址",
+            "hint": "留空不使用代理。如 http://127.0.0.1:7890",
+            "default": ""
+          },
+          "pool": {
+            "description": "风格池",
+            "type": "object",
+            "items": {
+              "basic_emotions": {
+                "description": "基础情绪",
+                "type": "list",
+                "default": ["neutral", "happy", "sad", "angry", "fearful", "disgusted", "surprised"]
+              },
+              "custom_styles": {
+                "description": "自定义风格",
+                "type": "list",
+                "hint": "在基础情绪基础上追加的风格标签",
+                "default": []
+              }
+            }
+          }
+        }
+      },
+      "mimo": {
+        "name": "小米 Mimo",
+        "description": "Mimo TTS 音色复刻，支持 (风格) 标签，风格池最丰富",
+        "items": {
+          "id": {
+            "type": "string",
+            "description": "提供商 ID（唯一）",
+            "default": "mimo"
+          },
+          "provider_type": {
+            "type": "string",
+            "description": "提供商类型（勿改）",
+            "default": "mimo",
+            "obvious_hint": true
+          },
+          "api_url": {
+            "type": "string",
+            "description": "API URL",
+            "hint": "默认：https://api.xiaomimimo.com/v1",
+            "default": "https://api.xiaomimimo.com/v1"
+          },
+          "api_key": {
+            "type": "string",
+            "description": "API Key",
+            "default": "",
+            "obvious_hint": true
+          },
+          "model": {
+            "type": "string",
+            "description": "模型名称",
+            "default": "mimo-v2.5-tts-voiceclone"
+          },
+          "voice_sample": {
+            "type": "file",
+            "description": "音色复刻样本",
+            "hint": "上传一段音频样本用于音色复刻，支持 mp3 和 wav 格式，大小不超过 10MB。",
+            "default": [],
+            "file_types": ["mp3", "wav"]
+          },
+          "format": {
+            "type": "string",
+            "description": "输出音频格式",
+            "options": ["wav", "mp3"],
+            "default": "wav"
+          }
+        }
+      }
+    }
+  },
+  "personas": {
+    "description": "人格 TTS 配置",
+    "hint": "为每个人格配置 TTS 提供商和音色。先在上方添加提供商，再在此引用提供商 ID。",
+    "type": "template_list",
+    "templates": {
+      "persona": {
+        "name": "人格配置",
+        "items": {
+          "select_persona": {
+            "type": "string",
+            "description": "人格",
+            "default": "default",
+            "_special": "select_persona"
+          },
+          "provider_id": {
+            "type": "string",
+            "description": "提供商 ID",
+            "hint": "填写在提供商池中配置的 ID。"
+          },
+          "voice": {
+            "type": "string",
+            "description": "音色覆盖",
+            "hint": "覆盖提供商默认音色。留空使用提供商默认值。"
+          },
+          "default_style": {
+            "type": "string",
+            "description": "默认风格",
+            "hint": "无风格标签时使用的默认风格。留空表示不添加风格。",
+            "default": ""
+          },
+          "speed": {
+            "type": "float",
+            "description": "语速覆盖",
+            "hint": "覆盖提供商默认语速。0 表示使用提供商默认值。",
+            "default": 0
+          }
+        }
+      }
+    }
+  }
+}

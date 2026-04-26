@@ -1,0 +1,6 @@
+name: astrbot_plugin_tts_plus
+display_name: 巴巴啵一
+version: 1.1.0
+description: 多提供商 TTS 语音合成插件，支持硅基流动、MiniMax、小米 Mimo，多人格风格路由
+author: Inoryu7z
+repo: https://github.com/Inoryu7z/astrbot_plugin_tts_plus
