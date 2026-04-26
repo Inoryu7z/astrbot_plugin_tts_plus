@@ -67,6 +67,23 @@ class ConfigManager:
         default_id = self.get_default_persona_id()
         return self.get_persona_config(default_id)
 
+    def get_persona_prob(self, umo: str) -> float:
+        persona = self.get_persona_for_umo(umo)
+        if persona:
+            try:
+                return float(persona.get("prob", 1.0) or 1.0)
+            except Exception:
+                pass
+        return 1.0
+
+    def get_persona_text_voice_output(self, umo: str) -> Optional[bool]:
+        persona = self.get_persona_for_umo(umo)
+        if persona:
+            val = persona.get("text_voice_output")
+            if val is not None:
+                return bool(val)
+        return None
+
     def is_tts_enabled(self) -> bool:
         return bool(self._cfg("tts_enabled", True))
 

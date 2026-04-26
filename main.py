@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import random
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -31,7 +32,7 @@ from .utils import clean_temp_dir, compute_cache_key
     "astrbot_plugin_tts_plus",
     "Inoryu7z",
     "多提供商 TTS 语音合成插件，支持硅基流动、MiniMax、小米 Mimo，多人格风格路由",
-    "1.1.0",
+    "1.2.0",
 )
 class TTSPlusPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -40,7 +41,6 @@ class TTSPlusPlugin(Star):
         self._providers: Dict[str, BaseTTSProvider] = {}
         self._cooldowns: Dict[str, float] = {}
         self._inflight: Dict[str, float] = {}
-        self._bg_tasks: List[asyncio.Task] = []
         self._current_style_tags: Dict[str, List[str]] = {}
         self._init_providers()
 
@@ -202,6 +202,11 @@ class TTSPlusPlugin(Star):
 
         provider, persona = persona_result
 
+        now = time.time()
+        expired_keys = [k for k, v in self._inflight.items() if now - v > 180]
+        for k in expired_keys:
+            del self._inflight[k]
+
         temp_dir = self._get_plugin_dir() / "temp"
         clean_temp_dir(temp_dir)
 
@@ -230,6 +235,10 @@ class TTSPlusPlugin(Star):
             expired_keys = [k for k, v in self._cooldowns.items() if time.time() - v > cooldown * 10]
             for k in expired_keys:
                 del self._cooldowns[k]
+
+        prob = self.config.get_persona_prob(umo)
+        if prob < 1.0 and random.random() > prob:
+            return
 
         inflight_key = compute_cache_key(umo, plain_text[:200])
         if inflight_key in self._inflight:
@@ -268,7 +277,9 @@ class TTSPlusPlugin(Star):
             )
 
             if audio_path and audio_path.exists():
-                if self.config.is_text_voice_output():
+                persona_tvo = self.config.get_persona_text_voice_output(umo)
+                text_voice = persona_tvo if persona_tvo is not None else self.config.is_text_voice_output()
+                if text_voice:
                     display_text = strip_all_style_tags(plain_text)
                     for i, comp in enumerate(result.chain):
                         if isinstance(comp, Plain):
@@ -291,9 +302,6 @@ class TTSPlusPlugin(Star):
             self._inflight.pop(inflight_key, None)
 
     async def terminate(self):
-        for task in self._bg_tasks:
-            if not task.done():
-                task.cancel()
         for provider in self._providers.values():
             try:
                 await provider.close()

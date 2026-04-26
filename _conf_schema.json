@@ -344,6 +344,18 @@
             "description": "语速覆盖",
             "hint": "覆盖提供商默认语速。0 表示使用提供商默认值。",
             "default": 0
+          },
+          "prob": {
+            "type": "float",
+            "description": "语音输出概率",
+            "hint": "每次回复生成语音的概率，0.0~1.0。1.0 表示始终生成，0.5 表示 50% 概率。默认 1.0。",
+            "default": 1.0
+          },
+          "text_voice_output": {
+            "type": "bool",
+            "description": "文字与语音同时输出",
+            "hint": "开启后同时发送文字和语音；关闭后仅发送语音。留空使用全局设置。",
+            "default": null
           }
         }
       }

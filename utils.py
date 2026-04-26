@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-import struct
 import time
 from pathlib import Path
 from typing import Optional
@@ -79,10 +78,18 @@ async def retry_with_backoff(
     raise last_error
 
 
+_last_clean_time: float = 0.0
+_CLEAN_INTERVAL_SECONDS: float = 300.0
+
+
 def clean_temp_dir(temp_dir: Path, max_age_hours: int = 2):
+    global _last_clean_time
+    now = time.time()
+    if now - _last_clean_time < _CLEAN_INTERVAL_SECONDS:
+        return
+    _last_clean_time = now
     if not temp_dir.exists():
         return
-    now = time.time()
     cutoff = now - max_age_hours * 3600
     removed = 0
     for f in temp_dir.iterdir():

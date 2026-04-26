@@ -135,7 +135,7 @@ def _extract_mimo_styles(text: str) -> tuple[str, List[str]]:
     def replacer(m):
         content = m.group(1)[1:-1].strip()
         parts = re.split(r"[\s，、,]+", content)
-        extracted = [p.strip() for p in parts if p.strip()]
+        extracted = [p.strip() for p in parts if p.strip() and p.strip() in KNOWN_STYLES]
         if extracted:
             tags.extend(extracted)
             return ""
