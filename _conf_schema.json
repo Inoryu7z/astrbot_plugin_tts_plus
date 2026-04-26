@@ -11,6 +11,12 @@
     "type": "bool",
     "default": true
   },
+  "inject_style_prompt": {
+    "description": "注入风格标签提示词",
+    "hint": "开启后会在系统提示词中注入风格标签使用说明，引导对话模型使用标签控制语音语气。关闭后不注入任何提示词，对话模型不会主动使用风格标签。",
+    "type": "bool",
+    "default": true
+  },
   "siliconflow_prompt_template": {
     "description": "硅基流动 提示词模板",
     "type": "text",

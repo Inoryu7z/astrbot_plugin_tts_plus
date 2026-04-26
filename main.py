@@ -130,6 +130,14 @@ class TTSPlusPlugin(Star):
         if not self.config.is_tts_enabled():
             return
 
+        if not self.config.is_inject_style_prompt():
+            try:
+                if hasattr(llm_req, "system_prompt") and llm_req.system_prompt:
+                    llm_req.system_prompt, _ = remove_ttsplus_injection(llm_req.system_prompt)
+            except Exception:
+                pass
+            return
+
         umo = str(getattr(event, "unified_msg_origin", "") or "global")
         injection = self._get_style_injection_for_umo(umo)
         if not injection:

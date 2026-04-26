@@ -16,6 +16,9 @@ class ConfigManager:
     def _cfg(self, key: str, default=None):
         return self._config.get(key, default)
 
+    def is_inject_style_prompt(self) -> bool:
+        return bool(self._cfg("inject_style_prompt", True))
+
     def get_provider_configs(self) -> Dict[str, Dict[str, Any]]:
         providers = self._cfg("providers", [])
         if not isinstance(providers, list):
