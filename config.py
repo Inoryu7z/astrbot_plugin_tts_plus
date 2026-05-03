@@ -80,8 +80,10 @@ class ConfigManager:
         persona = self.get_persona_for_umo(umo)
         if persona:
             val = persona.get("text_voice_output")
-            if val is not None:
-                return bool(val)
+            if val is True or str(val).strip().lower() == "true":
+                return True
+            if val is False or str(val).strip().lower() == "false":
+                return False
         return None
 
     def is_tts_enabled(self) -> bool:
@@ -136,7 +138,12 @@ class ConfigManager:
         from .utils import load_audio_as_base64
         path = Path(voice_sample)
         if not path.is_absolute():
-            path = self._plugin_dir / voice_sample
+            voice_sample_str = str(voice_sample).replace("\\", "/")
+            if voice_sample_str.startswith("files/"):
+                plugin_data_dir = self._plugin_dir.parent.parent / "plugin_data" / self._plugin_dir.name
+                path = plugin_data_dir / voice_sample
+            else:
+                path = self._plugin_dir / voice_sample
         b64 = load_audio_as_base64(path)
         if b64:
             self._audio_cache[provider_id] = b64

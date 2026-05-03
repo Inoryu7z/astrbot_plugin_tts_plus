@@ -32,7 +32,7 @@ from .utils import clean_temp_dir, compute_cache_key
     "astrbot_plugin_tts_plus",
     "Inoryu7z",
     "多提供商 TTS 语音合成插件，支持硅基流动、MiniMax、小米 Mimo，多人格风格路由",
-    "1.2.0",
+    "1.2.1",
 )
 class TTSPlusPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):

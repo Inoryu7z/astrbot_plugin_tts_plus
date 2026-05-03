@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.1] - 2026-05-03
+
+### 🐛 Bug 修复
+
+- 🔧 **Mimo 音色样本上传路径错误** — 修复 `get_audio_sample_base64` 在大提琴路径时未从 `plugin_data` 目录解析的问题。WebUI 上传的音频文件现在能正确读取。
+- 🔧 **人格级 text_voice_output 被重置** — 将 schema 类型从 `bool`（默认 null）改为 `string`（选项 "", "true", "false"），避免 `validate_config` 在校验时将 null 转为 False，导致"使用全局设置"行为失效。
+
+### 🔨 改进
+
+- 📝 **配置面板优化** — 新增 `default_persona` 字段（含人格选择器下拉框），替代模板列表内无法渲染的 `_special` 字段
+- 📝 **模板列表字段提示增强** — `select_persona` 和 `provider_id` 添加明显提示（obvious_hint），引导用户正确填写
+
 ## [1.2.0] - 2026-04-27
 
 ### 🐛 Bug 修复

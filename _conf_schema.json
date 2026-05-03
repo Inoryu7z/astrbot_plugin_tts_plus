@@ -81,9 +81,16 @@
     "type": "int",
     "default": 500
   },
+  "default_persona": {
+    "description": "默认人格",
+    "hint": "未匹配 UMO 映射时使用的默认人格。在下方的「人格 TTS 配置」中创建人格后，在此选择作为默认。",
+    "type": "string",
+    "_special": "select_persona",
+    "default": "default"
+  },
   "umo_persona_map": {
-    "description": "UMO 人格映射",
-    "hint": "键为 UMO（统一消息来源），值为人格配置序号。未匹配时使用默认人格。高级功能，一般无需配置。",
+    "description": "UMO → 人格映射",
+    "hint": "键为 UMO（统一消息来源，如群号/用户ID），值为人格 ID。未匹配时使用上方默认人格。高级功能，一般无需配置。",
     "type": "object",
     "items": {},
     "default": {}
@@ -319,14 +326,16 @@
         "items": {
           "select_persona": {
             "type": "string",
-            "description": "人格",
+            "description": "人格 ID",
+            "hint": "填写 AstrBot 中已配置的人格 ID（如 default、assistant 等）。可在上方的「默认人格」下拉框中查看可用的人格。",
             "default": "default",
-            "_special": "select_persona"
+            "obvious_hint": true
           },
           "provider_id": {
             "type": "string",
-            "description": "提供商 ID",
-            "hint": "填写在提供商池中配置的 ID。"
+            "description": "TTS 提供商 ID",
+            "hint": "填写在上方「TTS 提供商」中配置的提供商 ID（如 siliconflow、minimax、mimo）。",
+            "obvious_hint": true
           },
           "voice": {
             "type": "string",
@@ -352,10 +361,11 @@
             "default": 1.0
           },
           "text_voice_output": {
-            "type": "bool",
+            "type": "string",
             "description": "文字与语音同时输出",
             "hint": "开启后同时发送文字和语音；关闭后仅发送语音。留空使用全局设置。",
-            "default": null
+            "options": ["", "true", "false"],
+            "default": ""
           }
         }
       }
