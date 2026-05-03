@@ -5,7 +5,7 @@
 ### 🔄 重大重构
 
 - 🏗️ **多人格路由重写** — 参照 aiimg 插件模式：固定命名槽位 (`persona_1`~`persona_3`) 取代 `template_list`；运行时通过 `conversation_manager` / `persona_manager` 获取当前人格 ID，精准匹配 `select_persona`
-- 🏗️ **voice_sample 移至提供商级** — Mimo 音色样本与提供商绑定。顶层新增 mimotts_1~mimotts_3 三个完整 Mimo 提供商槽位，每个自带 oice_sample（	ype: file，直接上传）。人格通过 provider_id 引用 mimotts_1~mimotts_3。模板列表移除 Mimo。
+- 🏗️ **voice_sample 移至提供商级** — Mimo 音色样本与提供商绑定。顶层新增 `mimotts_1`~`mimotts_3` 三个完整 Mimo 提供商槽位，每个自带 `voice_sample`（`type: file`，直接上传）。人格通过 `provider_id` 引用 `mimotts_1`~`mimotts_3`。模板列表移除 Mimo。
 
 ### ✨ 新增
 
@@ -27,7 +27,8 @@
 
 - 🔧 **`/说话` 命令类型错误** — `event.plain_result(Record(...))` 改为 `MessageEventResult().chain`，解决 `Plain` 只接受 `str` 的问题
 
-- 🔧 **修复 `/说话` 命令会读出“说话”字样** — `event.message_str` 包含完整命令名，现自动剥离“说话”前缀
+- 🔹 **`/`语音切换` 命令** — 用当前人格快速切换 TTS 提供商，比如 `/`语音切换 mimotts_2`。切换后直接写入 `cmd_config.json`，重载不丢失
+- 🔹 **Mimo 提供商支持自定义 ID** — `mimotts_1`~3 槽位新增 `id` 字段，可自定义唯一标识名
 ## [1.2.1] - 2026-05-03
 
 ### 🐨 Bug 修复

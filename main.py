@@ -400,6 +400,44 @@ class TTSPlusPlugin(Star):
             logger.error(f"[TTS+] /说话 命令失败: {e}", exc_info=True)
             yield event.plain_result(f"语音合成失败: {e}")
 
+    @filter.command("语音切换")
+    async def cmd_switch_provider(self, event: AstrMessageEvent):
+        provider_id = event.message_str.strip()
+        if provider_id.startswith("语音切换"):
+            provider_id = provider_id[4:].strip()
+        if not provider_id:
+            available = ", ".join(self.config.get_provider_configs().keys()) or "无"
+            yield event.plain_result(f"请指定提供商 ID。可用：{available}")
+            return
+
+        all_configs = self.config.get_provider_configs()
+        if provider_id not in all_configs:
+            available = ", ".join(all_configs.keys()) or "无"
+            yield event.plain_result(f"提供商 {provider_id} 不存在。可用：{available}")
+            return
+
+        persona_id = await self._get_current_persona_id(event)
+        if not persona_id:
+            yield event.plain_result("无法获取当前人格")
+            return
+
+        target_slot_key = None
+        for idx in range(1, 4):
+            key = f"persona_{idx}"
+            slot = self.config._config.get(key)
+            if isinstance(slot, dict) and str(slot.get("select_persona", "")).strip() == persona_id:
+                target_slot_key = key
+                break
+
+        if not target_slot_key:
+            yield event.plain_result(f"当前人格 {persona_id} 未在 persona_1~3 中配置")
+            return
+
+        self.config._config[target_slot_key]["provider_id"] = provider_id
+        self.config._config.save_config()
+        self.config.clear_audio_cache()
+        yield event.plain_result(f"已切换 {persona_id} 的 TTS 提供商 → {provider_id}")
+
     async def terminate(self):
         for provider in self._providers.values():
             try:

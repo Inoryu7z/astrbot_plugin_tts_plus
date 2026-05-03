@@ -37,7 +37,8 @@ class ConfigManager:
             if isinstance(cfg, dict):
                 cfg = dict(cfg)
                 cfg["provider_type"] = "mimo"
-                result[key] = cfg
+                pid = str(cfg.get("id", key)).strip() or key
+                result[pid] = cfg
 
         return result
 

@@ -289,6 +289,12 @@
     "type": "object",
     "description": "Mimo TTS 提供商1",
     "items": {
+      "id": {
+        "type": "string",
+        "description": "提供商 ID",
+        "hint": "唯一标识，人格配置的 provider_id 填此值",
+        "default": "mimotts_1"
+      },
       "api_url": {
         "type": "string",
         "description": "API URL",
@@ -331,6 +337,12 @@
     "type": "object",
     "description": "Mimo TTS 提供商2",
     "items": {
+      "id": {
+        "type": "string",
+        "description": "提供商 ID",
+        "hint": "唯一标识，人格配置的 provider_id 填此值",
+        "default": "mimotts_2"
+      },
       "api_url": {
         "type": "string",
         "description": "API URL",
@@ -373,6 +385,12 @@
     "type": "object",
     "description": "Mimo TTS 提供商3",
     "items": {
+      "id": {
+        "type": "string",
+        "description": "提供商 ID",
+        "hint": "唯一标识，人格配置的 provider_id 填此值",
+        "default": "mimotts_3"
+      },
       "api_url": {
         "type": "string",
         "description": "API URL",
