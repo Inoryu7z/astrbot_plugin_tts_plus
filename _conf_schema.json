@@ -81,24 +81,10 @@
     "type": "int",
     "default": 500
   },
-  "default_persona": {
-    "description": "默认人格",
-    "hint": "未匹配 UMO 映射时使用的默认人格。在下方的「人格 TTS 配置」中创建人格后，在此选择作为默认。",
-    "type": "string",
-    "_special": "select_persona",
-    "default": "default"
-  },
-  "umo_persona_map": {
-    "description": "UMO → 人格映射",
-    "hint": "键为 UMO（统一消息来源，如群号/用户ID），值为人格 ID。未匹配时使用上方默认人格。高级功能，一般无需配置。",
-    "type": "object",
-    "items": {},
-    "default": {}
-  },
   "mimo_voice_sample": {
     "type": "file",
     "description": "Mimo 音色复刻样本",
-    "hint": "上传一段音频样本用于音色复刻（支持 mp3/wav，≤10MB）。配置 Mimo 提供商时会自动使用此样本。",
+    "hint": "上传一段音频样本用于音色复刻（支持 mp3/wav，≤10MB）。所有 Mimo 提供商默认使用此样本，如某提供商需单独指定，在下方提供商配置的「音色样本路径」中填写。",
     "default": [],
     "file_types": ["mp3", "wav"]
   },
@@ -311,6 +297,29 @@
             "description": "输出音频格式",
             "options": ["wav", "mp3"],
             "default": "wav"
+          },
+          "voice_sample": {
+            "type": "string",
+            "description": "音色样本路径（可选）",
+            "hint": "如需为该提供商单独指定音色样本，填写文件路径。留空则使用上方「Mimo 音色复刻样本」。",
+            "default": ""
+          },
+          "pool": {
+            "description": "风格池",
+            "type": "object",
+            "items": {
+              "basic_emotions": {
+                "description": "基础情绪",
+                "type": "list",
+                "default": ["happy", "sad", "angry", "fearful", "surprised", "neutral", "excited", "calm", "gentle", "serious"]
+              },
+              "custom_styles": {
+                "description": "自定义风格",
+                "type": "list",
+                "hint": "在基础情绪基础上追加的风格标签",
+                "default": []
+              }
+            }
           }
         }
       }
@@ -326,10 +335,9 @@
         "items": {
           "select_persona": {
             "type": "string",
-            "description": "人格 ID",
-            "hint": "填写 AstrBot 中已配置的人格 ID（如 default、assistant 等）。可在上方的「默认人格」下拉框中查看可用的人格。",
+            "description": "人格",
             "default": "default",
-            "obvious_hint": true
+            "_special": "select_persona"
           },
           "provider_id": {
             "type": "string",

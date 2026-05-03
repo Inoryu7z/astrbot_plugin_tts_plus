@@ -53,19 +53,11 @@ class ConfigManager:
     def get_persona_config(self, persona_id: str) -> Optional[Dict[str, Any]]:
         return self.get_persona_configs().get(persona_id)
 
-    def get_default_persona_id(self) -> str:
-        return str(self._cfg("default_persona", "default") or "default").strip()
-
     def get_persona_for_umo(self, umo: str) -> Optional[Dict[str, Any]]:
-        mapping = self._cfg("umo_persona_map", {})
-        if isinstance(mapping, dict):
-            pid = mapping.get(umo)
-            if pid:
-                persona = self.get_persona_config(str(pid))
-                if persona:
-                    return persona
-        default_id = self.get_default_persona_id()
-        return self.get_persona_config(default_id)
+        persona_configs = self.get_persona_configs()
+        if persona_configs:
+            return next(iter(persona_configs.values()))
+        return None
 
     def get_persona_prob(self, umo: str) -> float:
         persona = self.get_persona_for_umo(umo)

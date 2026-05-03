@@ -2,15 +2,16 @@
 
 ## [1.2.1] - 2026-05-03
 
-### 🐛 Bug 修复
+### 🐨 Bug 修复
 
-- 🔧 **Mimo 音色样本上传 "Missing plugin config info" 错误** — 根因：`file` 类型放在 `template_list` 内部时，TemplateListEditor 不传 `pluginName`/`configKey` 给 FileConfigItem。仿照 aiimg 方案，将 `voice_sample` 从模板中移出，改为顶层 `mimo_voice_sample`（`type: file`），`get_audio_sample_base64` 自动从顶层配置读取。
-- 🔧 **人格级 text_voice_output 被重置** — 将 schema 类型从 `bool`（默认 null）改为 `string`（选项 "", "true", "false"），避免 `validate_config` 在校验时将 null 转为 False，导致"使用全局设置"行为失效。
+- 🔧 **Mimo 音色样本上传 "Missing plugin config info" 错误** — 根因：`file` 类型在 `template_list` 内不工作。仿照 aiimg：顶层 `mimo_voice_sample`（`type: file`）直接上传；Mimo 模板中 `voice_sample`（`type: string`）支持多实例独立指定路径。`get_audio_sample_base64` 优先读 provider 级，fallback 到顶层。
+- 🔧 **人格级 text_voice_output 被重置** — 类型从 `bool`(default null) 改为 `string`(options "", "true", "false")，避免 validate_config 将 null 强制转为 False。
 
 ### 🔨 改进
 
-- 📝 **配置面板优化** — 新增 `default_persona` 字段（含人格选择器下拉框），替代模板列表内无法渲染的 `_special` 字段
-- 📝 **模板列表字段提示增强** — `select_persona` 和 `provider_id` 添加明显提示（obvious_hint），引导用户正确填写
+- 📝 **恢复人格下拉选择器** — `select_persona` 恢复 `_special: "select_persona"`，提供人格下拉框
+- 📝 **删除冗余 top-level 字段** — 移除无用的 `default_persona` 和无法渲染的 `umo_persona_map`
+- 📝 **Mimo 模板补全** — 恢复 `voice_sample`(string) 支持多实例 + 新增 `pool`(object) 风格池配置
 
 ## [1.2.0] - 2026-04-27
 
