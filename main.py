@@ -20,7 +20,7 @@ from .emotion import (
 )
 from .text import build_dual_text, strip_all_style_tags
 from .providers.base import BaseTTSProvider, get_provider_class
-from .utils import clean_temp_dir, compute_cache_key, get_audio_mime
+from .utils import clean_temp_dir, compute_cache_key
 
 
 @register(
@@ -285,18 +285,10 @@ class TTSPlusPlugin(Star):
             style_tags = self._current_style_tags.pop(persona_id, None)
 
             if provider.provider_name == "mimo":
-                b64 = self.config.get_audio_sample_base64(persona_id)
+                provider_id_used = str(persona.get("provider_id", ""))
+                b64 = self.config.get_audio_sample_base64(provider_id_used)
                 if b64:
-                    voice_sample = persona.get("voice_sample")
-                    mime = "audio/mpeg"
-                    if voice_sample:
-                        if isinstance(voice_sample, list):
-                            voice_sample = voice_sample[0] if voice_sample else None
-                        if voice_sample:
-                            sample_path = Path(str(voice_sample))
-                            if sample_path.exists():
-                                mime = get_audio_mime(sample_path)
-                    provider.set_voice_sample(b64, mime)
+                    provider.set_voice_sample(b64, "audio/mpeg")
 
             voice = provider.get_default_voice()
             speed_override = float(persona.get("speed", 1.0) or 1.0)
@@ -368,19 +360,11 @@ class TTSPlusPlugin(Star):
         provider, persona = persona_result
 
         try:
+            provider_id_used = str(persona.get("provider_id", ""))
             if provider.provider_name == "mimo":
-                b64 = self.config.get_audio_sample_base64(persona_id)
+                b64 = self.config.get_audio_sample_base64(provider_id_used)
                 if b64:
-                    voice_sample = persona.get("voice_sample")
-                    mime = "audio/mpeg"
-                    if voice_sample:
-                        if isinstance(voice_sample, list):
-                            voice_sample = voice_sample[0] if voice_sample else None
-                        if voice_sample:
-                            sample_path = Path(str(voice_sample))
-                            if sample_path.exists():
-                                mime = get_audio_mime(sample_path)
-                    provider.set_voice_sample(b64, mime)
+                    provider.set_voice_sample(b64, "audio/mpeg")
 
             voice = provider.get_default_voice()
             speed_override = float(persona.get("speed", 1.0) or 1.0)
@@ -396,7 +380,10 @@ class TTSPlusPlugin(Star):
             )
 
             if audio_path and audio_path.exists():
-                yield event.plain_result(Record(file=str(audio_path)))
+                from astrbot.core.message.message_event_result import MessageEventResult
+                result = MessageEventResult()
+                result.chain = [Record(file=str(audio_path))]
+                yield result
                 logger.info(f"[TTS+] /说话 命令合成成功: {audio_path.name}")
             else:
                 yield event.plain_result("语音合成失败")

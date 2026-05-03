@@ -105,16 +105,16 @@ class ConfigManager:
         except Exception:
             return 500
 
-    def get_audio_sample_base64(self, persona_id: str) -> Optional[str]:
-        cache_key = f"persona_{persona_id}"
+    def get_audio_sample_base64(self, provider_id: str) -> Optional[str]:
+        cache_key = f"provider_{provider_id}"
         if cache_key in self._audio_cache:
             return self._audio_cache[cache_key]
 
-        conf = self.get_persona_config(persona_id)
-        if not conf:
+        provider_cfg = self.get_provider_config(provider_id)
+        if not provider_cfg:
             return None
 
-        voice_sample = conf.get("voice_sample")
+        voice_sample = provider_cfg.get("voice_sample")
         if not voice_sample:
             return None
         if isinstance(voice_sample, list):
@@ -124,14 +124,14 @@ class ConfigManager:
 
         from .utils import load_audio_as_base64
 
-        path = Path(str(voice_sample))
+        path = Path(str(voice_sample).strip())
         if not path.is_absolute():
             voice_sample_str = str(voice_sample).replace("\\", "/")
             if voice_sample_str.startswith("files/"):
                 plugin_data_dir = self._plugin_dir.parent.parent / "plugin_data" / self._plugin_dir.name
                 path = plugin_data_dir / voice_sample
             else:
-                path = self._plugin_dir / voice_sample
+                path = self._plugin_dir.parent.parent / voice_sample
 
         b64 = load_audio_as_base64(path)
         if b64:
