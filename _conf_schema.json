@@ -27,12 +27,6 @@
     "type": "int",
     "default": 500
   },
-  "inject_style_prompt": {
-    "description": "注入风格标签提示词",
-    "hint": "开启后会在系统提示词中注入风格标签使用说明，引导对话模型使用标签控制语音语气。关闭后不注入任何提示词，对话模型不会主动使用风格标签。",
-    "type": "bool",
-    "default": true
-  },
   "siliconflow_prompt_template": {
     "description": "硅基流动 提示词模板",
     "type": "text",
@@ -291,7 +285,7 @@
       },
       "mimo": {
         "name": "小米 Mimo",
-        "description": "Mimo TTS 音色复刻，支持 (风格) 标签，风格池最丰富",
+        "description": "Mimo TTS 音色复刻，根据文本自动推断语气",
         "items": {
           "id": {
             "type": "string",
@@ -329,34 +323,6 @@
               "mp3"
             ],
             "default": "wav"
-          },
-          "pool": {
-            "description": "风格池",
-            "type": "object",
-            "items": {
-              "basic_emotions": {
-                "description": "基础情绪",
-                "type": "list",
-                "default": [
-                  "happy",
-                  "sad",
-                  "angry",
-                  "fearful",
-                  "surprised",
-                  "neutral",
-                  "excited",
-                  "calm",
-                  "gentle",
-                  "serious"
-                ]
-              },
-              "custom_styles": {
-                "description": "自定义风格",
-                "type": "list",
-                "hint": "在基础情绪基础上追加的风格标签",
-                "default": []
-              }
-            }
           }
         }
       }
@@ -377,6 +343,12 @@
         "description": "TTS 提供商 ID",
         "hint": "填写在上方「TTS 提供商」中配置的提供商 ID（如 siliconflow、minimax、mimo）。",
         "obvious_hint": true
+      },
+      "inject_prompt": {
+        "type": "bool",
+        "description": "注入提示词",
+        "hint": "开启后会在系统提示词中注入语音风格控制说明。默认关闭。",
+        "default": false
       },
       "voice_sample": {
         "type": "file",
@@ -429,6 +401,12 @@
         "hint": "填写在上方「TTS 提供商」中配置的提供商 ID（如 siliconflow、minimax、mimo）。",
         "obvious_hint": true
       },
+      "inject_prompt": {
+        "type": "bool",
+        "description": "注入提示词",
+        "hint": "开启后会在系统提示词中注入语音风格控制说明。默认关闭。",
+        "default": false
+      },
       "voice_sample": {
         "type": "file",
         "description": "Mimo 音色样本（仅 Mimo 需要）",
@@ -479,6 +457,12 @@
         "description": "TTS 提供商 ID",
         "hint": "填写在上方「TTS 提供商」中配置的提供商 ID（如 siliconflow、minimax、mimo）。",
         "obvious_hint": true
+      },
+      "inject_prompt": {
+        "type": "bool",
+        "description": "注入提示词",
+        "hint": "开启后会在系统提示词中注入语音风格控制说明。默认关闭。",
+        "default": false
       },
       "voice_sample": {
         "type": "file",

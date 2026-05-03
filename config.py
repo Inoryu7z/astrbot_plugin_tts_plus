@@ -19,9 +19,6 @@ class ConfigManager:
     def _cfg(self, key: str, default=None):
         return self._config.get(key, default)
 
-    def is_inject_style_prompt(self) -> bool:
-        return bool(self._cfg("inject_style_prompt", True))
-
     def get_provider_configs(self) -> Dict[str, Dict[str, Any]]:
         providers = self._cfg("providers", [])
         if not isinstance(providers, list):
@@ -71,6 +68,12 @@ class ConfigManager:
             if val is False or str(val).strip().lower() == "false":
                 return False
         return None
+
+    def get_persona_inject_prompt(self, persona_id: str) -> bool:
+        conf = self.get_persona_config(persona_id)
+        if conf:
+            return bool(conf.get("inject_prompt", False))
+        return False
 
     def get_timeout(self) -> float:
         try:

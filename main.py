@@ -167,7 +167,7 @@ class TTSPlusPlugin(Star):
         if self.config.get_persona_config(persona_id) is None:
             return
 
-        if not self.config.is_inject_style_prompt():
+        if not self.config.get_persona_inject_prompt(persona_id):
             try:
                 if hasattr(llm_req, "system_prompt") and llm_req.system_prompt:
                     llm_req.system_prompt, _ = remove_ttsplus_injection(llm_req.system_prompt)
