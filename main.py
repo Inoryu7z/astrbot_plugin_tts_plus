@@ -37,6 +37,7 @@ class TTSPlusPlugin(Star):
         self._cooldowns: Dict[str, float] = {}
         self._inflight: Dict[str, float] = {}
         self._current_style_tags: Dict[str, List[str]] = {}
+        self._llm_response_seen: Dict[str, bool] = {}
         self._init_providers()
 
     def _get_plugin_dir(self) -> Path:
@@ -216,6 +217,8 @@ class TTSPlusPlugin(Star):
         else:
             self._current_style_tags.pop(persona_id, None)
 
+        self._llm_response_seen[persona_id] = True
+
     @filter.on_decorating_result(priority=-1000)
     async def on_decorating_result(self, event: AstrMessageEvent):
         try:
@@ -230,6 +233,9 @@ class TTSPlusPlugin(Star):
 
         persona_id = await self._get_current_persona_id(event)
         if not persona_id:
+            return
+
+        if not self._llm_response_seen.pop(persona_id, False):
             return
 
         persona_result = self._get_persona_provider(persona_id)
@@ -342,8 +348,10 @@ class TTSPlusPlugin(Star):
 
     @filter.command("说话")
     async def cmd_speak(self, event: AstrMessageEvent):
-        text = event.message_str.strip()
-        if not text:
+        raw_text = event.message_str.strip()
+        if raw_text.startswith("说话"):
+            raw_text = raw_text[2:].strip()
+        if not raw_text:
             yield event.plain_result("请输入要说的内容，例如：/说话 你好呀")
             return
 
@@ -373,7 +381,7 @@ class TTSPlusPlugin(Star):
             temp_dir.mkdir(exist_ok=True)
 
             audio_path = await provider.synth(
-                text=text,
+                text=raw_text,
                 voice=voice,
                 out_dir=temp_dir,
                 speed=speed_override if speed_override > 0 else None,

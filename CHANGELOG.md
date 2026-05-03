@@ -27,6 +27,7 @@
 
 - 🔧 **`/说话` 命令类型错误** — `event.plain_result(Record(...))` 改为 `MessageEventResult().chain`，解决 `Plain` 只接受 `str` 的问题
 
+- 🔧 **修复 `/说话` 命令会读出“说话”字样** — `event.message_str` 包含完整命令名，现自动剥离“说话”前缀
 ## [1.2.1] - 2026-05-03
 
 ### 🐨 Bug 修复
