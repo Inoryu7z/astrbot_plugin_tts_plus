@@ -302,7 +302,7 @@
           "voice_sample": {
             "type": "string",
             "description": "音色复刻样本路径",
-            "hint": "在插件数据目录（plugin_data/astrbot_plugin_tts_plus/）下的 files/mimo_voice_sample/ 中放置音频文件（mp3/wav，≤10MB），然后填写相对路径。\n\n示例：files/mimo_voice_sample/my_voice.mp3\n\n提示：可通过 AstrBot WebUI 的文件管理器上传文件到该目录。",
+            "hint": "在插件数据目录（plugin_data/astrbot_plugin_tts_plus/）下的 files/mimo_voice_sample/ 中放置音频文件（mp3/wav，≤10MB），然后填写相对路径。\n\n示例：files/mimo_voice_sample/my_voice.mp3",
             "default": "",
             "obvious_hint": true
           },
