@@ -348,6 +348,63 @@ class TTSPlusPlugin(Star):
         finally:
             self._inflight.pop(inflight_key, None)
 
+    @filter.command("说话")
+    async def cmd_speak(self, event: AstrMessageEvent):
+        text = event.message_str.strip()
+        if not text:
+            yield event.plain_result("请输入要说的内容，例如：/说话 你好呀")
+            return
+
+        persona_id = await self._get_current_persona_id(event)
+        if not persona_id:
+            yield event.plain_result("无法获取当前人格")
+            return
+
+        persona_result = self._get_persona_provider(persona_id)
+        if not persona_result:
+            yield event.plain_result(f"人格 {persona_id} 未配置 TTS")
+            return
+
+        provider, persona = persona_result
+
+        try:
+            if provider.provider_name == "mimo":
+                b64 = self.config.get_audio_sample_base64(persona_id)
+                if b64:
+                    voice_sample = persona.get("voice_sample")
+                    mime = "audio/mpeg"
+                    if voice_sample:
+                        if isinstance(voice_sample, list):
+                            voice_sample = voice_sample[0] if voice_sample else None
+                        if voice_sample:
+                            sample_path = Path(str(voice_sample))
+                            if sample_path.exists():
+                                mime = get_audio_mime(sample_path)
+                    provider.set_voice_sample(b64, mime)
+
+            voice = provider.get_default_voice()
+            speed_override = float(persona.get("speed", 1.0) or 1.0)
+
+            temp_dir = self._get_plugin_dir() / "temp"
+            temp_dir.mkdir(exist_ok=True)
+
+            audio_path = await provider.synth(
+                text=text,
+                voice=voice,
+                out_dir=temp_dir,
+                speed=speed_override if speed_override > 0 else None,
+            )
+
+            if audio_path and audio_path.exists():
+                yield event.plain_result(Record(file=str(audio_path)))
+                logger.info(f"[TTS+] /说话 命令合成成功: {audio_path.name}")
+            else:
+                yield event.plain_result("语音合成失败")
+
+        except Exception as e:
+            logger.error(f"[TTS+] /说话 命令失败: {e}", exc_info=True)
+            yield event.plain_result(f"语音合成失败: {e}")
+
     async def terminate(self):
         for provider in self._providers.values():
             try:
