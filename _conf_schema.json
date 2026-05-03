@@ -1,15 +1,31 @@
 {
-  "tts_enabled": {
-    "description": "启用语音合成",
-    "hint": "关闭后插件不生成语音。",
-    "type": "bool",
-    "default": true
+  "timeout": {
+    "description": "请求超时(秒)",
+    "type": "float",
+    "default": 30.0
   },
-  "text_voice_output": {
-    "description": "文字与语音同时输出",
-    "hint": "开启后同时发送文字和语音；关闭后仅发送语音。",
-    "type": "bool",
-    "default": true
+  "max_retries": {
+    "description": "最大重试次数",
+    "type": "int",
+    "default": 2
+  },
+  "cooldown": {
+    "description": "冷却时间(秒)",
+    "hint": "两次语音合成之间的最小间隔。0 表示不限制。",
+    "type": "float",
+    "default": 0.0
+  },
+  "text_min_limit": {
+    "description": "最小文本长度",
+    "hint": "文本长度低于此值时不生成语音。",
+    "type": "int",
+    "default": 2
+  },
+  "text_limit": {
+    "description": "最大文本长度",
+    "hint": "文本长度超过此值时不生成语音。0 表示不限制。",
+    "type": "int",
+    "default": 500
   },
   "inject_style_prompt": {
     "description": "注入风格标签提示词",
@@ -40,7 +56,7 @@
   "mimo_prompt_template": {
     "description": "小米 Mimo 提示词模板",
     "type": "text",
-    "default": "# 语音风格控制\n\n你的回复会被语音播报给用户。语音模型会根据文本内容自动推断语气和情感，不需要你用标签来标注情绪。\n\n**不要使用情绪标签**（如开心、悲伤、愤怒），语音模型从文字本身就能理解情绪。\n\n只有当文字本身无法传达的效果，才可以视情况加入音频标签：\n{audio_tags}\n\n用法：在句首或句中用括号包裹 → (叹气)唉…… → (小声)应该没问题 → (紧张，深呼吸)冷静\n\n绝大多数时候不需要任何标签，自然写就行。",
+    "default": "# 语音风格控制\n\n你的回复会被语音播报给用户。语音模型会根据文本内容自动推断语气和情感，不需要你用标签来标注情绪。\n\n**不要使用情绪标签**（如开心、悲伤、愤怒），语音模型从文字本身就能理解情绪。\n\n只有当文字本身无法传达的效果，才可以视情况加入音频标签：\n{audio_tags}\n\n用法：在句首或句中用括号包裹  (叹气)唉  (小声)应该没问题  (紧张，深呼吸)冷静\n\n绝大多数时候不需要任何标签，自然写就行。",
     "hint": "可用变量：{audio_tags}（音频标签列表）。",
     "editor_mode": true,
     "editor_mode_fullscreen": true,
@@ -50,43 +66,24 @@
   "mimo_audio_tags": {
     "description": "Mimo 可用音频标签",
     "type": "list",
-    "default": ["吸气", "深呼吸", "叹气", "长叹一口气", "喘息", "屏息", "笑", "轻笑", "大笑", "冷笑", "抽泣", "呜咽", "哽咽", "嚎啕大哭", "悄悄话"],
+    "default": [
+      "吸气",
+      "深呼吸",
+      "叹气",
+      "长叹一口气",
+      "喘息",
+      "屏息",
+      "笑",
+      "轻笑",
+      "大笑",
+      "冷笑",
+      "抽泣",
+      "呜咽",
+      "哽咽",
+      "嚎啕大哭",
+      "悄悄话"
+    ],
     "hint": "只有这些标签会出现在提示词中，告诉对话模型可以使用。可根据需要增减。"
-  },
-  "timeout": {
-    "description": "请求超时(秒)",
-    "type": "float",
-    "default": 30.0
-  },
-  "max_retries": {
-    "description": "最大重试次数",
-    "type": "int",
-    "default": 2
-  },
-  "cooldown": {
-    "description": "冷却时间(秒)",
-    "hint": "两次语音合成之间的最小间隔。0 表示不限制。",
-    "type": "float",
-    "default": 0.0
-  },
-  "text_min_limit": {
-    "description": "最小文本长度",
-    "hint": "文本长度低于此值时不生成语音。",
-    "type": "int",
-    "default": 2
-  },
-  "text_limit": {
-    "description": "最大文本长度",
-    "hint": "文本长度超过此值时不生成语音。0 表示不限制。",
-    "type": "int",
-    "default": 500
-  },
-  "mimo_voice_sample": {
-    "type": "file",
-    "description": "Mimo 音色复刻样本",
-    "hint": "上传一段音频样本用于音色复刻（支持 mp3/wav，≤10MB）。所有 Mimo 提供商默认使用此样本，如某提供商需单独指定，在下方提供商配置的「音色样本路径」中填写。",
-    "default": [],
-    "file_types": ["mp3", "wav"]
   },
   "providers": {
     "description": "TTS 提供商",
@@ -133,7 +130,12 @@
           "format": {
             "type": "string",
             "description": "音频格式",
-            "options": ["mp3", "wav", "pcm", "opus"],
+            "options": [
+              "mp3",
+              "wav",
+              "pcm",
+              "opus"
+            ],
             "default": "mp3"
           },
           "speed": {
@@ -159,7 +161,16 @@
               "basic_emotions": {
                 "description": "基础情绪",
                 "type": "list",
-                "default": ["HAPPY", "SAD", "ANGRY", "FEARFUL", "SURPRISED", "DISGUSTED", "NEUTRAL", "EXCITED"]
+                "default": [
+                  "HAPPY",
+                  "SAD",
+                  "ANGRY",
+                  "FEARFUL",
+                  "SURPRISED",
+                  "DISGUSTED",
+                  "NEUTRAL",
+                  "EXCITED"
+                ]
               },
               "custom_styles": {
                 "description": "自定义风格",
@@ -201,7 +212,12 @@
           "model": {
             "type": "string",
             "description": "模型名称",
-            "options": ["speech-2.8-hd", "speech-2.8-turbo", "speech-01-turbo", "speech-01-tycoon"],
+            "options": [
+              "speech-2.8-hd",
+              "speech-2.8-turbo",
+              "speech-01-turbo",
+              "speech-01-tycoon"
+            ],
             "default": "speech-2.8-turbo"
           },
           "voice_id": {
@@ -227,7 +243,12 @@
           "format": {
             "type": "string",
             "description": "音频格式",
-            "options": ["mp3", "wav", "flac", "pcm"],
+            "options": [
+              "mp3",
+              "wav",
+              "flac",
+              "pcm"
+            ],
             "default": "mp3"
           },
           "sample_rate": {
@@ -248,7 +269,15 @@
               "basic_emotions": {
                 "description": "基础情绪",
                 "type": "list",
-                "default": ["neutral", "happy", "sad", "angry", "fearful", "disgusted", "surprised"]
+                "default": [
+                  "neutral",
+                  "happy",
+                  "sad",
+                  "angry",
+                  "fearful",
+                  "disgusted",
+                  "surprised"
+                ]
               },
               "custom_styles": {
                 "description": "自定义风格",
@@ -295,14 +324,11 @@
           "format": {
             "type": "string",
             "description": "输出音频格式",
-            "options": ["wav", "mp3"],
+            "options": [
+              "wav",
+              "mp3"
+            ],
             "default": "wav"
-          },
-          "voice_sample": {
-            "type": "string",
-            "description": "音色样本路径（可选）",
-            "hint": "如需为该提供商单独指定音色样本，填写文件路径。留空则使用上方「Mimo 音色复刻样本」。",
-            "default": ""
           },
           "pool": {
             "description": "风格池",
@@ -311,7 +337,18 @@
               "basic_emotions": {
                 "description": "基础情绪",
                 "type": "list",
-                "default": ["happy", "sad", "angry", "fearful", "surprised", "neutral", "excited", "calm", "gentle", "serious"]
+                "default": [
+                  "happy",
+                  "sad",
+                  "angry",
+                  "fearful",
+                  "surprised",
+                  "neutral",
+                  "excited",
+                  "calm",
+                  "gentle",
+                  "serious"
+                ]
               },
               "custom_styles": {
                 "description": "自定义风格",
@@ -325,57 +362,156 @@
       }
     }
   },
-  "personas": {
-    "description": "人格 TTS 配置",
-    "hint": "为每个人格配置 TTS 提供商和音色。先在上方添加提供商，再在此引用提供商 ID。",
-    "type": "template_list",
-    "templates": {
-      "persona": {
-        "name": "人格配置",
-        "items": {
-          "select_persona": {
-            "type": "string",
-            "description": "人格",
-            "default": "default",
-            "_special": "select_persona"
-          },
-          "provider_id": {
-            "type": "string",
-            "description": "TTS 提供商 ID",
-            "hint": "填写在上方「TTS 提供商」中配置的提供商 ID（如 siliconflow、minimax、mimo）。",
-            "obvious_hint": true
-          },
-          "voice": {
-            "type": "string",
-            "description": "音色覆盖",
-            "hint": "覆盖提供商默认音色。留空使用提供商默认值。"
-          },
-          "default_style": {
-            "type": "string",
-            "description": "默认风格",
-            "hint": "无风格标签时使用的默认风格。留空表示不添加风格。",
-            "default": ""
-          },
-          "speed": {
-            "type": "float",
-            "description": "语速覆盖",
-            "hint": "覆盖提供商默认语速。0 表示使用提供商默认值。",
-            "default": 0
-          },
-          "prob": {
-            "type": "float",
-            "description": "语音输出概率",
-            "hint": "每次回复生成语音的概率，0.0~1.0。1.0 表示始终生成，0.5 表示 50% 概率。默认 1.0。",
-            "default": 1.0
-          },
-          "text_voice_output": {
-            "type": "string",
-            "description": "文字与语音同时输出",
-            "hint": "开启后同时发送文字和语音；关闭后仅发送语音。留空使用全局设置。",
-            "options": ["", "true", "false"],
-            "default": ""
-          }
-        }
+  "persona_1": {
+    "description": "人格1 TTS配置",
+    "type": "object",
+    "items": {
+      "select_persona": {
+        "type": "string",
+        "description": "人格",
+        "default": "default",
+        "_special": "select_persona"
+      },
+      "provider_id": {
+        "type": "string",
+        "description": "TTS 提供商 ID",
+        "hint": "填写在上方「TTS 提供商」中配置的提供商 ID（如 siliconflow、minimax、mimo）。",
+        "obvious_hint": true
+      },
+      "voice_sample": {
+        "type": "file",
+        "description": "Mimo 音色样本（仅 Mimo 需要）",
+        "hint": "上传 mp3/wav 音频（10MB），用于音色复刻。非 Mimo 提供商忽略此项。",
+        "default": [],
+        "file_types": [
+          "mp3",
+          "wav"
+        ]
+      },
+      "speed": {
+        "type": "float",
+        "description": "语速覆盖",
+        "hint": "覆盖提供商默认语速。1.0 表示使用提供商默认。",
+        "default": 1.0
+      },
+      "prob": {
+        "type": "float",
+        "description": "语音输出概率",
+        "hint": "每次回复生成语音的概率，0.0~1.0。1.0 表示始终生成。",
+        "default": 1.0
+      },
+      "text_voice_output": {
+        "type": "string",
+        "description": "文字与语音同时输出",
+        "hint": "开启后同时发送文字和语音；关闭后仅发送语音。留空使用默认。",
+        "options": [
+          "",
+          "true",
+          "false"
+        ],
+        "default": ""
+      }
+    }
+  },
+  "persona_2": {
+    "description": "人格2 TTS配置",
+    "type": "object",
+    "items": {
+      "select_persona": {
+        "type": "string",
+        "description": "人格",
+        "default": "default",
+        "_special": "select_persona"
+      },
+      "provider_id": {
+        "type": "string",
+        "description": "TTS 提供商 ID",
+        "hint": "填写在上方「TTS 提供商」中配置的提供商 ID（如 siliconflow、minimax、mimo）。",
+        "obvious_hint": true
+      },
+      "voice_sample": {
+        "type": "file",
+        "description": "Mimo 音色样本（仅 Mimo 需要）",
+        "hint": "上传 mp3/wav 音频（10MB），用于音色复刻。非 Mimo 提供商忽略此项。",
+        "default": [],
+        "file_types": [
+          "mp3",
+          "wav"
+        ]
+      },
+      "speed": {
+        "type": "float",
+        "description": "语速覆盖",
+        "hint": "覆盖提供商默认语速。1.0 表示使用提供商默认。",
+        "default": 1.0
+      },
+      "prob": {
+        "type": "float",
+        "description": "语音输出概率",
+        "hint": "每次回复生成语音的概率，0.0~1.0。1.0 表示始终生成。",
+        "default": 1.0
+      },
+      "text_voice_output": {
+        "type": "string",
+        "description": "文字与语音同时输出",
+        "hint": "开启后同时发送文字和语音；关闭后仅发送语音。留空使用默认。",
+        "options": [
+          "",
+          "true",
+          "false"
+        ],
+        "default": ""
+      }
+    }
+  },
+  "persona_3": {
+    "description": "人格3 TTS配置",
+    "type": "object",
+    "items": {
+      "select_persona": {
+        "type": "string",
+        "description": "人格",
+        "default": "default",
+        "_special": "select_persona"
+      },
+      "provider_id": {
+        "type": "string",
+        "description": "TTS 提供商 ID",
+        "hint": "填写在上方「TTS 提供商」中配置的提供商 ID（如 siliconflow、minimax、mimo）。",
+        "obvious_hint": true
+      },
+      "voice_sample": {
+        "type": "file",
+        "description": "Mimo 音色样本（仅 Mimo 需要）",
+        "hint": "上传 mp3/wav 音频（10MB），用于音色复刻。非 Mimo 提供商忽略此项。",
+        "default": [],
+        "file_types": [
+          "mp3",
+          "wav"
+        ]
+      },
+      "speed": {
+        "type": "float",
+        "description": "语速覆盖",
+        "hint": "覆盖提供商默认语速。1.0 表示使用提供商默认。",
+        "default": 1.0
+      },
+      "prob": {
+        "type": "float",
+        "description": "语音输出概率",
+        "hint": "每次回复生成语音的概率，0.0~1.0。1.0 表示始终生成。",
+        "default": 1.0
+      },
+      "text_voice_output": {
+        "type": "string",
+        "description": "文字与语音同时输出",
+        "hint": "开启后同时发送文字和语音；关闭后仅发送语音。留空使用默认。",
+        "options": [
+          "",
+          "true",
+          "false"
+        ],
+        "default": ""
       }
     }
   }

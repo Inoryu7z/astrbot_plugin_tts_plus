@@ -7,6 +7,9 @@ from typing import Any, Dict, List, Optional
 from astrbot.api import AstrBotConfig, logger
 
 
+PERSONA_SLOT_COUNT = 3
+
+
 class ConfigManager:
     def __init__(self, config: AstrBotConfig, plugin_dir: Path):
         self._config = config
@@ -36,53 +39,38 @@ class ConfigManager:
     def get_provider_config(self, provider_id: str) -> Optional[Dict[str, Any]]:
         return self.get_provider_configs().get(provider_id)
 
-    def get_persona_configs(self) -> Dict[str, Dict[str, Any]]:
-        personas = self._cfg("personas", [])
-        if not isinstance(personas, list):
-            return {}
-        result = {}
-        for p in personas:
-            if not isinstance(p, dict):
-                continue
-            pid = str(p.get("select_persona", "") or p.get("persona_id", "")).strip()
-            if not pid:
-                continue
-            result[pid] = p
-        return result
+    def _get_persona_slot_config(self, index: int) -> Optional[Dict[str, Any]]:
+        conf = self._cfg(f"persona_{index}")
+        return conf if isinstance(conf, dict) else None
 
     def get_persona_config(self, persona_id: str) -> Optional[Dict[str, Any]]:
-        return self.get_persona_configs().get(persona_id)
-
-    def get_persona_for_umo(self, umo: str) -> Optional[Dict[str, Any]]:
-        persona_configs = self.get_persona_configs()
-        if persona_configs:
-            return next(iter(persona_configs.values()))
+        for idx in range(1, PERSONA_SLOT_COUNT + 1):
+            conf = self._get_persona_slot_config(idx)
+            if not conf:
+                continue
+            slot_persona = str(conf.get("select_persona", "") or "").strip()
+            if slot_persona == persona_id:
+                return conf
         return None
 
-    def get_persona_prob(self, umo: str) -> float:
-        persona = self.get_persona_for_umo(umo)
-        if persona:
+    def get_persona_prob(self, persona_id: str) -> float:
+        conf = self.get_persona_config(persona_id)
+        if conf:
             try:
-                return float(persona.get("prob", 1.0) or 1.0)
+                return float(conf.get("prob", 1.0) or 1.0)
             except Exception:
                 pass
         return 1.0
 
-    def get_persona_text_voice_output(self, umo: str) -> Optional[bool]:
-        persona = self.get_persona_for_umo(umo)
-        if persona:
-            val = persona.get("text_voice_output")
+    def get_persona_text_voice_output(self, persona_id: str) -> Optional[bool]:
+        conf = self.get_persona_config(persona_id)
+        if conf:
+            val = conf.get("text_voice_output")
             if val is True or str(val).strip().lower() == "true":
                 return True
             if val is False or str(val).strip().lower() == "false":
                 return False
         return None
-
-    def is_tts_enabled(self) -> bool:
-        return bool(self._cfg("tts_enabled", True))
-
-    def is_text_voice_output(self) -> bool:
-        return bool(self._cfg("text_voice_output", True))
 
     def get_timeout(self) -> float:
         try:
@@ -114,25 +102,26 @@ class ConfigManager:
         except Exception:
             return 500
 
-    def get_audio_sample_base64(self, provider_id: str) -> Optional[str]:
-        if provider_id in self._audio_cache:
-            return self._audio_cache[provider_id]
-        voice_sample = None
-        provider_cfg = self.get_provider_config(provider_id)
-        if provider_cfg:
-            voice_sample = provider_cfg.get("voice_sample")
-            if not voice_sample and provider_cfg.get("provider_type") == "mimo":
-                voice_sample = self._config.get("mimo_voice_sample")
-        else:
-            voice_sample = self._config.get("mimo_voice_sample")
+    def get_audio_sample_base64(self, persona_id: str) -> Optional[str]:
+        cache_key = f"persona_{persona_id}"
+        if cache_key in self._audio_cache:
+            return self._audio_cache[cache_key]
+
+        conf = self.get_persona_config(persona_id)
+        if not conf:
+            return None
+
+        voice_sample = conf.get("voice_sample")
         if not voice_sample:
             return None
         if isinstance(voice_sample, list):
             voice_sample = voice_sample[0] if voice_sample else None
         if not voice_sample:
             return None
+
         from .utils import load_audio_as_base64
-        path = Path(voice_sample)
+
+        path = Path(str(voice_sample))
         if not path.is_absolute():
             voice_sample_str = str(voice_sample).replace("\\", "/")
             if voice_sample_str.startswith("files/"):
@@ -140,14 +129,15 @@ class ConfigManager:
                 path = plugin_data_dir / voice_sample
             else:
                 path = self._plugin_dir / voice_sample
+
         b64 = load_audio_as_base64(path)
         if b64:
-            self._audio_cache[provider_id] = b64
+            self._audio_cache[cache_key] = b64
         return b64
 
-    def clear_audio_cache(self, provider_id: Optional[str] = None):
-        if provider_id:
-            self._audio_cache.pop(provider_id, None)
+    def clear_audio_cache(self, persona_id: Optional[str] = None):
+        if persona_id:
+            self._audio_cache.pop(f"persona_{persona_id}", None)
         else:
             self._audio_cache.clear()
 

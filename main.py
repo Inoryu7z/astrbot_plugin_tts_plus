@@ -16,23 +16,18 @@ from .config import ConfigManager
 from .emotion import (
     build_style_injection_prompt,
     extract_style_tags_from_response,
-    strip_all_markers,
-    get_default_styles,
     remove_ttsplus_injection,
 )
 from .text import build_dual_text, strip_all_style_tags
 from .providers.base import BaseTTSProvider, get_provider_class
-from .providers.siliconflow import SiliconFlowTTS
-from .providers.minimax import MiniMaxTTS
-from .providers.mimo import MimoTTS
-from .utils import clean_temp_dir, compute_cache_key
+from .utils import clean_temp_dir, compute_cache_key, get_audio_mime
 
 
 @register(
     "astrbot_plugin_tts_plus",
     "Inoryu7z",
     "多提供商 TTS 语音合成插件，支持硅基流动、MiniMax、小米 Mimo，多人格风格路由",
-    "1.2.1",
+    "1.3.0",
 )
 class TTSPlusPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -67,23 +62,6 @@ class TTSPlusPlugin(Star):
 
             try:
                 provider = cls(pcfg)
-                if provider_type == "mimo":
-                    b64 = self.config.get_audio_sample_base64(pid)
-                    if b64:
-                        from .utils import get_audio_mime
-                        voice_sample = pcfg.get("voice_sample")
-                        mime = "audio/mpeg"
-                        if voice_sample:
-                            if isinstance(voice_sample, list):
-                                voice_sample = voice_sample[0] if voice_sample else None
-                            if voice_sample:
-                                sample_path = Path(voice_sample)
-                                mime = get_audio_mime(sample_path)
-                        provider.set_voice_sample(b64, mime)
-                        logger.info(f"[TTS+] Mimo 提供商 {pid} 已加载音色样本")
-                    else:
-                        logger.warning(f"[TTS+] Mimo 提供商 {pid} 未配置音色样本")
-
                 self._providers[pid] = provider
                 logger.info(f"[TTS+] 已加载提供商: {pid} ({provider_type})")
             except Exception as e:
@@ -92,8 +70,8 @@ class TTSPlusPlugin(Star):
     def _get_provider(self, provider_id: str) -> Optional[BaseTTSProvider]:
         return self._providers.get(provider_id)
 
-    def _get_persona_provider(self, umo: str) -> Optional[tuple[BaseTTSProvider, Dict[str, Any]]]:
-        persona = self.config.get_persona_for_umo(umo)
+    def _get_persona_provider(self, persona_id: str) -> Optional[tuple[BaseTTSProvider, Dict[str, Any]]]:
+        persona = self.config.get_persona_config(persona_id)
         if not persona:
             return None
         provider_id = str(persona.get("provider_id", "")).strip()
@@ -101,12 +79,12 @@ class TTSPlusPlugin(Star):
             return None
         provider = self._get_provider(provider_id)
         if not provider:
-            logger.warning(f"[TTS+] 人格 {persona.get('persona_id')} 引用的提供商 {provider_id} 不存在")
+            logger.warning(f"[TTS+] 人格 {persona_id} 引用的提供商 {provider_id} 不存在")
             return None
         return provider, persona
 
-    def _get_style_injection_for_umo(self, umo: str) -> str:
-        result = self._get_persona_provider(umo)
+    def _get_style_injection_for_persona(self, persona_id: str) -> str:
+        result = self._get_persona_provider(persona_id)
         if not result:
             return ""
         provider, persona = result
@@ -125,9 +103,68 @@ class TTSPlusPlugin(Star):
             audio_tags,
         )
 
+    async def _get_current_persona_id(self, event: AstrMessageEvent) -> Optional[str]:
+        try:
+            umo = str(getattr(event, "unified_msg_origin", "") or "").strip()
+            if not umo:
+                return None
+
+            persona_id = None
+
+            conv_mgr = getattr(self.context, "conversation_manager", None)
+            if conv_mgr:
+                try:
+                    curr_cid = await conv_mgr.get_curr_conversation_id(umo)
+                    if curr_cid:
+                        conversation = await conv_mgr.get_conversation(umo, curr_cid)
+                        if conversation:
+                            persona_id = getattr(conversation, "persona_id", None)
+                except Exception as e:
+                    logger.debug(f"[TTS+] 从 conversation_manager 获取 persona_id 失败: {e}")
+
+            if persona_id:
+                return str(persona_id).strip() or None
+
+            persona_mgr = getattr(self.context, "persona_manager", None)
+            if persona_mgr:
+                try:
+                    persona_obj = None
+                    if hasattr(persona_mgr, "get_default_persona_v3"):
+                        persona_obj = await persona_mgr.get_default_persona_v3(umo)
+                    if persona_obj:
+                        name = self._extract_persona_name(persona_obj)
+                        if name:
+                            return name
+                except Exception as e:
+                    logger.debug(f"[TTS+] 从 persona_manager 获取默认人格失败: {e}")
+        except Exception as e:
+            logger.debug(f"[TTS+] 获取人格 ID 失败: {e}")
+        return None
+
+    @staticmethod
+    def _extract_persona_name(persona_obj) -> Optional[str]:
+        if not persona_obj:
+            return None
+        if isinstance(persona_obj, dict):
+            for key in ("name", "persona_id", "id"):
+                val = persona_obj.get(key)
+                if val and str(val).strip():
+                    return str(val).strip()
+            return None
+        for attr in ("name", "persona_id", "id"):
+            if hasattr(persona_obj, attr):
+                val = getattr(persona_obj, attr, None)
+                if val and str(val).strip():
+                    return str(val).strip()
+        return None
+
     @filter.on_llm_request()
     async def on_llm_request(self, event: AstrMessageEvent, llm_req):
-        if not self.config.is_tts_enabled():
+        persona_id = await self._get_current_persona_id(event)
+        if not persona_id:
+            return
+
+        if self.config.get_persona_config(persona_id) is None:
             return
 
         if not self.config.is_inject_style_prompt():
@@ -138,8 +175,7 @@ class TTSPlusPlugin(Star):
                 pass
             return
 
-        umo = str(getattr(event, "unified_msg_origin", "") or "global")
-        injection = self._get_style_injection_for_umo(umo)
+        injection = self._get_style_injection_for_persona(persona_id)
         if not injection:
             return
 
@@ -153,11 +189,11 @@ class TTSPlusPlugin(Star):
 
     @filter.on_llm_response()
     async def on_llm_response(self, event: AstrMessageEvent, resp: LLMResponse):
-        if not self.config.is_tts_enabled():
+        persona_id = await self._get_current_persona_id(event)
+        if not persona_id:
             return
 
-        umo = str(getattr(event, "unified_msg_origin", "") or "global")
-        result = self._get_persona_provider(umo)
+        result = self._get_persona_provider(persona_id)
         if not result:
             return
 
@@ -171,20 +207,17 @@ class TTSPlusPlugin(Star):
         )
 
         if style_tags:
-            self._current_style_tags[umo] = style_tags
+            self._current_style_tags[persona_id] = style_tags
             if cleaned_text != completion_text:
                 try:
                     resp.completion_text = cleaned_text
                 except Exception:
                     pass
         else:
-            self._current_style_tags.pop(umo, None)
+            self._current_style_tags.pop(persona_id, None)
 
     @filter.on_decorating_result(priority=-1000)
     async def on_decorating_result(self, event: AstrMessageEvent):
-        if not self.config.is_tts_enabled():
-            return
-
         try:
             if hasattr(event, "is_stopped") and event.is_stopped():
                 return
@@ -195,8 +228,11 @@ class TTSPlusPlugin(Star):
         if not result or not getattr(result, "chain", None):
             return
 
-        umo = str(getattr(event, "unified_msg_origin", "") or "global")
-        persona_result = self._get_persona_provider(umo)
+        persona_id = await self._get_current_persona_id(event)
+        if not persona_id:
+            return
+
+        persona_result = self._get_persona_provider(persona_id)
         if not persona_result:
             return
 
@@ -229,30 +265,41 @@ class TTSPlusPlugin(Star):
 
         cooldown = self.config.get_cooldown()
         if cooldown > 0:
-            last_time = self._cooldowns.get(umo, 0)
+            last_time = self._cooldowns.get(persona_id, 0)
             if time.time() - last_time < cooldown:
                 return
-            expired_keys = [k for k, v in self._cooldowns.items() if time.time() - v > cooldown * 10]
-            for k in expired_keys:
+            expired_cd = [k for k, v in self._cooldowns.items() if time.time() - v > cooldown * 10]
+            for k in expired_cd:
                 del self._cooldowns[k]
 
-        prob = self.config.get_persona_prob(umo)
+        prob = self.config.get_persona_prob(persona_id)
         if prob < 1.0 and random.random() > prob:
             return
 
-        inflight_key = compute_cache_key(umo, plain_text[:200])
+        inflight_key = compute_cache_key(persona_id, plain_text[:200])
         if inflight_key in self._inflight:
             return
         self._inflight[inflight_key] = time.time()
 
         try:
-            style_tags = self._current_style_tags.pop(umo, None)
-            default_style = str(persona.get("default_style", "") or "").strip()
-            if not style_tags and default_style:
-                style_tags = [default_style]
+            style_tags = self._current_style_tags.pop(persona_id, None)
 
-            voice = str(persona.get("voice", "") or "").strip() or provider.get_default_voice()
-            speed_override = float(persona.get("speed", 0) or 0)
+            if provider.provider_name == "mimo":
+                b64 = self.config.get_audio_sample_base64(persona_id)
+                if b64:
+                    voice_sample = persona.get("voice_sample")
+                    mime = "audio/mpeg"
+                    if voice_sample:
+                        if isinstance(voice_sample, list):
+                            voice_sample = voice_sample[0] if voice_sample else None
+                        if voice_sample:
+                            sample_path = Path(str(voice_sample))
+                            if sample_path.exists():
+                                mime = get_audio_mime(sample_path)
+                    provider.set_voice_sample(b64, mime)
+
+            voice = provider.get_default_voice()
+            speed_override = float(persona.get("speed", 1.0) or 1.0)
 
             dual = build_dual_text(
                 plain_text,
@@ -277,8 +324,8 @@ class TTSPlusPlugin(Star):
             )
 
             if audio_path and audio_path.exists():
-                persona_tvo = self.config.get_persona_text_voice_output(umo)
-                text_voice = persona_tvo if persona_tvo is not None else self.config.is_text_voice_output()
+                persona_tvo = self.config.get_persona_text_voice_output(persona_id)
+                text_voice = persona_tvo if persona_tvo is not None else True
                 if text_voice:
                     display_text = strip_all_style_tags(plain_text)
                     for i, comp in enumerate(result.chain):
@@ -289,7 +336,7 @@ class TTSPlusPlugin(Star):
                     result.chain.clear()
                     result.chain.append(Record(file=str(audio_path)))
 
-                self._cooldowns[umo] = time.time()
+                self._cooldowns[persona_id] = time.time()
                 logger.info(f"[TTS+] 语音合成成功: {audio_path.name}, 风格={style_tags}")
             else:
                 logger.debug(f"[TTS+] 语音合成未返回音频")

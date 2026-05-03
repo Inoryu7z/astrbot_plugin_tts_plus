@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.3.0] - 2026-05-03
+
+### 🔄 重大重构
+
+- 🏗️ **多人格路由重写** — 参照 aiimg 插件模式：固定命名槽位 (`persona_1`~`persona_3`) 取代 `template_list`；运行时通过 `conversation_manager` / `persona_manager` 获取当前人格 ID，精准匹配 `select_persona`
+- 🏗️ **Mimo 音色样本** — `voice_sample` 改为 `type: file` 直接在各人格槽位上传，无需手动填路径
+
+### 🗑️ 删除
+
+- ❌ 删除 `tts_enabled`（全局开关）— 有人格配置即有 TTS，无则无
+- ❌ 删除 `text_voice_output`（全局）— 默认文字+语音同出，人格级可覆盖
+- ❌ 删除人格级 `voice`（音色覆盖）和 `default_style`（默认风格）字段
+
+### 🔨 改进
+
+- 📝 人格级 `speed` 默认值 0 → 1.0
+
 ## [1.2.1] - 2026-05-03
 
 ### 🐨 Bug 修复
