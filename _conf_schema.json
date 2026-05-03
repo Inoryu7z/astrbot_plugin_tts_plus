@@ -325,10 +325,11 @@
             "default": "wav"
           },
           "voice_sample": {
-            "type": "string",
-            "description": "音色样本路径",
-            "hint": "音色复刻用到的参考音频。把 mp3/wav 上传到 AstrBot data 目录（如 wwwroot/），填相对路径或绝对路径。示例：./wwwroot/my_voice.wav",
-            "default": ""
+            "type": "file",
+            "description": "音色样本（仅 Mimo 需要）",
+            "hint": "上传 mp3/wav 音频（≤10MB），用于音色复刻。",
+            "default": [],
+            "file_types": ["mp3", "wav"]
           }
         }
       }
