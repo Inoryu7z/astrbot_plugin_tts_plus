@@ -81,7 +81,7 @@
   },
   "providers": {
     "description": "TTS 提供商",
-    "hint": "在此添加 TTS 提供商，每个人格引用提供商 ID。先添加提供商，再在人格配置中引用。",
+    "hint": "在此添加硅基流动或 MiniMax 提供商。Mimo 提供商请在下方独立槽位配置。",
     "type": "template_list",
     "templates": {
       "siliconflow": {
@@ -282,56 +282,132 @@
             }
           }
         }
+      }
+    }
+  },
+  "mimotts_1": {
+    "type": "object",
+    "description": "Mimo TTS 提供商1",
+    "items": {
+      "api_url": {
+        "type": "string",
+        "description": "API URL",
+        "hint": "默认：https://api.xiaomimimo.com/v1",
+        "default": "https://api.xiaomimimo.com/v1"
       },
-      "mimo": {
-        "name": "小米 Mimo",
-        "description": "Mimo TTS 音色复刻，根据文本自动推断语气",
-        "items": {
-          "id": {
-            "type": "string",
-            "description": "提供商 ID（唯一）",
-            "default": "mimo"
-          },
-          "provider_type": {
-            "type": "string",
-            "description": "提供商类型（勿改）",
-            "default": "mimo",
-            "obvious_hint": true
-          },
-          "api_url": {
-            "type": "string",
-            "description": "API URL",
-            "hint": "默认：https://api.xiaomimimo.com/v1",
-            "default": "https://api.xiaomimimo.com/v1"
-          },
-          "api_key": {
-            "type": "string",
-            "description": "API Key",
-            "default": "",
-            "obvious_hint": true
-          },
-          "model": {
-            "type": "string",
-            "description": "模型名称",
-            "default": "mimo-v2.5-tts-voiceclone"
-          },
-          "format": {
-            "type": "string",
-            "description": "输出音频格式",
-            "options": [
-              "wav",
-              "mp3"
-            ],
-            "default": "wav"
-          },
-          "voice_sample": {
-            "type": "file",
-            "description": "音色样本（仅 Mimo 需要）",
-            "hint": "上传 mp3/wav 音频（≤10MB），用于音色复刻。",
-            "default": [],
-            "file_types": ["mp3", "wav"]
-          }
-        }
+      "api_key": {
+        "type": "string",
+        "description": "API Key",
+        "default": "",
+        "obvious_hint": true
+      },
+      "model": {
+        "type": "string",
+        "description": "模型名称",
+        "default": "mimo-v2.5-tts-voiceclone"
+      },
+      "voice_sample": {
+        "type": "file",
+        "description": "音色样本",
+        "hint": "上传 mp3/wav 音频（10MB），用于音色复刻。",
+        "default": [],
+        "file_types": [
+          "mp3",
+          "wav"
+        ]
+      },
+      "format": {
+        "type": "string",
+        "description": "输出音频格式",
+        "options": [
+          "wav",
+          "mp3"
+        ],
+        "default": "wav"
+      }
+    }
+  },
+  "mimotts_2": {
+    "type": "object",
+    "description": "Mimo TTS 提供商2",
+    "items": {
+      "api_url": {
+        "type": "string",
+        "description": "API URL",
+        "hint": "默认：https://api.xiaomimimo.com/v1",
+        "default": "https://api.xiaomimimo.com/v1"
+      },
+      "api_key": {
+        "type": "string",
+        "description": "API Key",
+        "default": "",
+        "obvious_hint": true
+      },
+      "model": {
+        "type": "string",
+        "description": "模型名称",
+        "default": "mimo-v2.5-tts-voiceclone"
+      },
+      "voice_sample": {
+        "type": "file",
+        "description": "音色样本",
+        "hint": "上传 mp3/wav 音频（10MB），用于音色复刻。",
+        "default": [],
+        "file_types": [
+          "mp3",
+          "wav"
+        ]
+      },
+      "format": {
+        "type": "string",
+        "description": "输出音频格式",
+        "options": [
+          "wav",
+          "mp3"
+        ],
+        "default": "wav"
+      }
+    }
+  },
+  "mimotts_3": {
+    "type": "object",
+    "description": "Mimo TTS 提供商3",
+    "items": {
+      "api_url": {
+        "type": "string",
+        "description": "API URL",
+        "hint": "默认：https://api.xiaomimimo.com/v1",
+        "default": "https://api.xiaomimimo.com/v1"
+      },
+      "api_key": {
+        "type": "string",
+        "description": "API Key",
+        "default": "",
+        "obvious_hint": true
+      },
+      "model": {
+        "type": "string",
+        "description": "模型名称",
+        "default": "mimo-v2.5-tts-voiceclone"
+      },
+      "voice_sample": {
+        "type": "file",
+        "description": "音色样本",
+        "hint": "上传 mp3/wav 音频（10MB），用于音色复刻。",
+        "default": [],
+        "file_types": [
+          "mp3",
+          "wav"
+        ]
+      },
+      "format": {
+        "type": "string",
+        "description": "输出音频格式",
+        "options": [
+          "wav",
+          "mp3"
+        ],
+        "default": "wav"
       }
     }
   },
@@ -348,7 +424,7 @@
       "provider_id": {
         "type": "string",
         "description": "TTS 提供商 ID",
-        "hint": "填写在上方「TTS 提供商」中配置的提供商 ID（如 siliconflow、minimax、mimo）。",
+        "hint": "填写提供商 ID（如 siliconflow、minimax、mimotts_1、mimotts_2、mimotts_3）。",
         "obvious_hint": true
       },
       "inject_prompt": {
@@ -395,7 +471,7 @@
       "provider_id": {
         "type": "string",
         "description": "TTS 提供商 ID",
-        "hint": "填写在上方「TTS 提供商」中配置的提供商 ID（如 siliconflow、minimax、mimo）。",
+        "hint": "填写提供商 ID（如 siliconflow、minimax、mimotts_1、mimotts_2、mimotts_3）。",
         "obvious_hint": true
       },
       "inject_prompt": {
@@ -442,7 +518,7 @@
       "provider_id": {
         "type": "string",
         "description": "TTS 提供商 ID",
-        "hint": "填写在上方「TTS 提供商」中配置的提供商 ID（如 siliconflow、minimax、mimo）。",
+        "hint": "填写提供商 ID（如 siliconflow、minimax、mimotts_1、mimotts_2、mimotts_3）。",
         "obvious_hint": true
       },
       "inject_prompt": {

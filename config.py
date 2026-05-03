@@ -20,17 +20,25 @@ class ConfigManager:
         return self._config.get(key, default)
 
     def get_provider_configs(self) -> Dict[str, Dict[str, Any]]:
-        providers = self._cfg("providers", [])
-        if not isinstance(providers, list):
-            return {}
         result = {}
-        for p in providers:
-            if not isinstance(p, dict):
-                continue
-            pid = str(p.get("id", "")).strip()
-            if not pid:
-                continue
-            result[pid] = p
+        providers = self._cfg("providers", [])
+        if isinstance(providers, list):
+            for p in providers:
+                if not isinstance(p, dict):
+                    continue
+                pid = str(p.get("id", "")).strip()
+                if not pid:
+                    continue
+                result[pid] = p
+
+        for idx in range(1, 4):
+            key = f"mimotts_{idx}"
+            cfg = self._cfg(key)
+            if isinstance(cfg, dict):
+                cfg = dict(cfg)
+                cfg["provider_type"] = "mimo"
+                result[key] = cfg
+
         return result
 
     def get_provider_config(self, provider_id: str) -> Optional[Dict[str, Any]]:

@@ -5,7 +5,7 @@
 ### 🔄 重大重构
 
 - 🏗️ **多人格路由重写** — 参照 aiimg 插件模式：固定命名槽位 (`persona_1`~`persona_3`) 取代 `template_list`；运行时通过 `conversation_manager` / `persona_manager` 获取当前人格 ID，精准匹配 `select_persona`
-- 🏗️ **voice_sample 移至提供商级** — Mimo 音色样本配置从人格级移到提供商级，多个人格共用同一提供商时共享音色样本
+- 🏗️ **voice_sample 移至提供商级** — Mimo 音色样本与提供商绑定。顶层新增 mimotts_1~mimotts_3 三个完整 Mimo 提供商槽位，每个自带 oice_sample（	ype: file，直接上传）。人格通过 provider_id 引用 mimotts_1~mimotts_3。模板列表移除 Mimo。
 
 ### ✨ 新增
 
