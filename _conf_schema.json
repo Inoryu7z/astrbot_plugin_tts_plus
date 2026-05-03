@@ -95,6 +95,13 @@
     "items": {},
     "default": {}
   },
+  "mimo_voice_sample": {
+    "type": "file",
+    "description": "Mimo 音色复刻样本",
+    "hint": "上传一段音频样本用于音色复刻（支持 mp3/wav，≤10MB）。配置 Mimo 提供商时会自动使用此样本。",
+    "default": [],
+    "file_types": ["mp3", "wav"]
+  },
   "providers": {
     "description": "TTS 提供商",
     "hint": "在此添加 TTS 提供商，每个人格引用提供商 ID。先添加提供商，再在人格配置中引用。",
@@ -298,13 +305,6 @@
             "type": "string",
             "description": "模型名称",
             "default": "mimo-v2.5-tts-voiceclone"
-          },
-          "voice_sample": {
-            "type": "string",
-            "description": "音色复刻样本路径",
-            "hint": "在插件数据目录（plugin_data/astrbot_plugin_tts_plus/）下的 files/mimo_voice_sample/ 中放置音频文件（mp3/wav，≤10MB），然后填写相对路径。\n\n示例：files/mimo_voice_sample/my_voice.mp3",
-            "default": "",
-            "obvious_hint": true
           },
           "format": {
             "type": "string",

@@ -4,7 +4,7 @@
 
 ### 🐛 Bug 修复
 
-- 🔧 **Mimo 音色样本上传路径错误** — 修复 `get_audio_sample_base64` 在大提琴路径时未从 `plugin_data` 目录解析的问题。WebUI 上传的音频文件现在能正确读取。
+- 🔧 **Mimo 音色样本上传 "Missing plugin config info" 错误** — 根因：`file` 类型放在 `template_list` 内部时，TemplateListEditor 不传 `pluginName`/`configKey` 给 FileConfigItem。仿照 aiimg 方案，将 `voice_sample` 从模板中移出，改为顶层 `mimo_voice_sample`（`type: file`），`get_audio_sample_base64` 自动从顶层配置读取。
 - 🔧 **人格级 text_voice_output 被重置** — 将 schema 类型从 `bool`（默认 null）改为 `string`（选项 "", "true", "false"），避免 `validate_config` 在校验时将 null 转为 False，导致"使用全局设置"行为失效。
 
 ### 🔨 改进

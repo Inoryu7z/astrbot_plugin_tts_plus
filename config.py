@@ -125,10 +125,14 @@ class ConfigManager:
     def get_audio_sample_base64(self, provider_id: str) -> Optional[str]:
         if provider_id in self._audio_cache:
             return self._audio_cache[provider_id]
+        voice_sample = None
         provider_cfg = self.get_provider_config(provider_id)
-        if not provider_cfg:
-            return None
-        voice_sample = provider_cfg.get("voice_sample")
+        if provider_cfg:
+            voice_sample = provider_cfg.get("voice_sample")
+            if not voice_sample and provider_cfg.get("provider_type") == "mimo":
+                voice_sample = self._config.get("mimo_voice_sample")
+        else:
+            voice_sample = self._config.get("mimo_voice_sample")
         if not voice_sample:
             return None
         if isinstance(voice_sample, list):
