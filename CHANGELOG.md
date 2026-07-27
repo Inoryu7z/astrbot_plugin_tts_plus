@@ -1,97 +1,114 @@
 # Changelog
 
-## [1.3.0] - 2026-05-03
+## v1.3.0
 
-### 🔄 重大重构
+**🎭 多人格槽位重构 + Mimo 提供商升级**
 
-- 🏗️ **多人格路由重写** — 参照 aiimg 插件模式：固定命名槽位 (`persona_1`~`persona_3`) 取代 `template_list`；运行时通过 `conversation_manager` / `persona_manager` 获取当前人格 ID，精准匹配 `select_persona`
-- 🏗️ **voice_sample 移至提供商级** — Mimo 音色样本与提供商绑定。顶层新增 `mimotts_1`~`mimotts_3` 三个完整 Mimo 提供商槽位，每个自带 `voice_sample`（`type: file`，直接上传）。人格通过 `provider_id` 引用 `mimotts_1`~`mimotts_3`。模板列表移除 Mimo。
+**1. 🧩 人格配置改为固定槽位**
 
-### ✨ 新增
+* `persona_1` ~ `persona_3` 取代原模板列表，运行时按当前人格精准匹配。
+* 每个人格可独立绑定提供商、设置语速、控制语音输出概率与是否注入提示词。
 
-- ➕ **`/说话` 命令** — 用当前人格的语音说指定内容，例如 `/说话 你好呀`
+**2. 🏊 Mimo 提供商移至顶层槽位**
 
-### 🗑️ 删除
+* 新增 `mimotts_1` ~ `mimotts_3` 三个完整 Mimo 槽位，每个自带音色样本上传字段。
+* 槽位 ID 可自定义（如 `voice_alice`），人格通过 `provider_id` 引用。
 
-- ❌ 删除 `tts_enabled`（全局开关）— 有人格配置即有 TTS，无则无
-- ❌ 删除 `text_voice_output`（全局）— 默认文字+语音同出，人格级可覆盖
-- ❌ 删除人格级 `voice`（音色覆盖）和 `default_style`（默认风格）字段
-- ❌ 删除 Mimo 提供商的 `pool` 字段 — Mimo 不支持风格池
+**3. ➕ 新增 `/说话` 命令**
 
-### 🔨 改进
+* 用当前人格的语音说指定内容，例如 `/说话 你好呀`。
 
-- 📝 人格级 `speed` 默认值 0 → 1.0
-- 📝 `inject_prompt` 改为人格级配置，默认关闭（不再有全局 `inject_style_prompt`）
+**4. 🔄 新增 `/语音切换` 命令**
 
-### 🐨 Bug 修复
+* 用当前人格快速切换 TTS 提供商，切换后写入配置文件，重载不丢失。
 
-- 🔧 **`/说话` 命令类型错误** — `event.plain_result(Record(...))` 改为 `MessageEventResult().chain`，解决 `Plain` 只接受 `str` 的问题
+**5. 🗑️ 删除冗余全局开关**
 
-- 🔹 **`/`语音切换` 命令** — 用当前人格快速切换 TTS 提供商，比如 `/`语音切换 mimotts_2`。切换后直接写入 `cmd_config.json`，重载不丢失
-- 🔹 **Mimo 提供商支持自定义 ID** — `mimotts_1`~3 槽位新增 `id` 字段，可自定义唯一标识名
-## [1.2.1] - 2026-05-03
+* 移除全局 `tts_enabled`、全局 `text_voice_output`、人格级 `voice` 和 `default_style`、Mimo 提供商的 `pool` 字段。
+* 有人格配置即有 TTS，无则无；默认文字 + 语音同出，人格级可覆盖。
 
-### 🐨 Bug 修复
+**6. 🔧 提示词注入改为人格级配置**
 
-- 🔧 **Mimo 音色样本上传 "Missing plugin config info" 错误** — 根因：`file` 类型在 `template_list` 内不工作。仿照 aiimg：顶层 `mimo_voice_sample`（`type: file`）直接上传；Mimo 模板中 `voice_sample`（`type: string`）支持多实例独立指定路径。`get_audio_sample_base64` 优先读 provider 级，fallback 到顶层。
-- 🔧 **人格级 text_voice_output 被重置** — 类型从 `bool`(default null) 改为 `string`(options "", "true", "false")，避免 validate_config 将 null 强制转为 False。
+* `inject_prompt` 字段默认关闭，按人格独立控制是否注入风格提示词。
 
-### 🔨 改进
+---
 
-- 📝 **恢复人格下拉选择器** — `select_persona` 恢复 `_special: "select_persona"`，提供人格下拉框
-- 📝 **删除冗余 top-level 字段** — 移除无用的 `default_persona` 和无法渲染的 `umo_persona_map`
-- 📝 **Mimo 模板补全** — 恢复 `voice_sample`(string) 支持多实例 + 新增 `pool`(object) 风格池配置
+## v1.2.1
 
-## [1.2.0] - 2026-04-27
+**🐛 Mimo 上传与人格配置修复**
 
-### 🐛 Bug 修复
+**1. 🔧 Mimo 音色样本上传失败**
 
-- 🔧 **Mimo 风格标签误提取** — `_extract_mimo_styles` 添加 KNOWN_STYLES 白名单过滤，防止 `(注：此处省略)` 等正常括号内容被误识别为风格标签（emotion.py + text.py）
-- 🔧 **_inflight 残留条目** — 在 `on_decorating_result` 入口添加 180 秒过期清理，防止极端情况下防重复键泄漏
-- 🔧 **临时文件清理性能** — `clean_temp_dir` 添加 300 秒间隔限制，避免每次合成都扫描整个目录
-- 🔧 **未使用代码清理** — 删除 `_bg_tasks` 及相关代码、删除 `struct` 未使用导入
+* 修复「Missing plugin config info」错误，音色样本改为顶层 `mimotts_N` 槽位直接上传。
 
-### ✨ 新功能
+**2. 🔧 人格级 `text_voice_output` 被重置**
 
-- 🎯 **人格级概率输出** — 每个人格可独立设置 `prob`（0.0~1.0），控制语音生成概率
-- 🎯 **人格级文字+语音输出** — 每个人格可独立设置 `text_voice_output`，覆盖全局设置
+* 字段类型从 bool 改为 string（`""` / `"true"` / `"false"`），避免被框架强制转为 False。
 
-## [1.1.0] - 2026-04-27
+**3. 📝 人格下拉选择器恢复**
 
-### 🐛 Bug 修复
+* `select_persona` 恢复人格下拉框，移除冗余的 `default_persona` 和 `umo_persona_map` 字段。
 
-- 🔧 **MiniMax URL 下载死锁** — 将 `_handle_json_response` 改为 async，避免在已有事件循环中嵌套 `run_until_complete`
-- 🔧 **_inflight 防重复泄漏** — 处理 `CancelledError` 确保 finally 块始终执行
-- 🔧 **临时文件无限积累** — 在语音合成入口调用 `clean_temp_dir` 自动清理
-- 🔧 **提供商类型检测不可靠** — 在 schema 中添加 `provider_type` 只读字段
-- 🔧 **无 system_prompt 时跳过注入** — 初始化为空字符串而非跳过整个注入
-- 🔧 **validate_audio_file 误判** — 未知格式返回 False 而非 True
+---
 
-### ✨ 新功能
+## v1.2.0
 
-- 🎯 **系统提示词注入暴露** — 参考 dayflow 的 XML 标签 + 幂等清理模式
-  - 三个提供商独立提示词模板（Markdown 格式，暗色编辑器，全屏模式）
-  - 每次注入前自动清除旧注入内容，确保幂等
-- 🎯 **Mimo 专属提示词设计** — 禁止情绪标签，只允许音频标签（叹气/笑/抽泣等）
-- 🎯 **Mimo 音频标签可配置** — 新增 `mimo_audio_tags` 配置字段
-- 🎯 **Mimo 合并格式支持** — 多风格写在同一对括号内 `(温柔 甜美)`
+**🎯 人格级概率输出 + 风格标签修复**
 
-### 🔨 改进
+**1. 🎯 人格级语音概率**
 
-- 📝 **PAREN_STYLE_RE 减少误匹配** — 加入 KNOWN_STYLES 白名单过滤
-- 📝 **Mimo _build_messages 简化** — 去掉冗余的 user_content 判断逻辑
-- 📝 **_cooldowns 自动清理** — 在 cooldown 检查时清理过期条目
-- 📝 **providers/__init__.py 添加导入** — 触发 provider 自动注册
+* 每个人格可独立设置 `prob`（0.0 ~ 1.0），控制语音生成概率。
 
-## [1.0.0] - 2026-04-26
+**2. 🎯 人格级文字 + 语音输出**
 
-### 🎉 初始发布
+* 每个人格可独立设置 `text_voice_output`，覆盖全局设置。
 
-- 🎭 **多提供商 TTS** — 支持硅基流动（CosyVoice2）、MiniMax（speech-2.8）、小米 Mimo（音色复刻）
-- 🎨 **风格标签系统** — LLM 自动嵌入风格标签，TTS 提供商原生解析
-- 👤 **多人格路由** — 不同人格绑定不同提供商/音色/风格，UMO 粒度映射
-- 🏊 **可视化风格池** — 每个提供商独立风格池，分类展示，支持自定义扩展
-- 🔊 **双通道文本** — TTS 文本保留风格标签，显示文本自动清洗
-- 🔄 **智能缓存** — SHA256 音频缓存 + 指数退避重试
-- 📁 **统一 Provider 接口** — BaseTTSProvider 抽象基类 + 注册机制，易于扩展
-- 🎯 **最小提示词注入** — 仅注入风格标签格式和可用列表，减少对话污染
+**3. 🔧 Mimo 风格标签误提取**
+
+* 添加白名单过滤，防止正常括号内容被误识别为风格标签。
+
+**4. 🔧 临时文件清理性能**
+
+* 添加 300 秒间隔限制，避免每次合成都扫描整个目录。
+
+---
+
+## v1.1.0
+
+**📝 提示词注入暴露 + Mimo 专属设计**
+
+**1. 🎯 三个提供商独立提示词模板**
+
+* 硅基流动 / MiniMax / Mimo 各自独立的 Markdown 提示词模板，支持全屏编辑器。
+* 每次注入前自动清除旧内容，保证幂等。
+
+**2. 🎯 Mimo 专属提示词设计**
+
+* 禁止情绪标签（开心 / 悲伤等），只允许音频标签（叹气 / 笑 / 抽泣等）。
+* 语音模型能从文字本身理解情感，仅在文字无法传达时使用音频标签。
+
+**3. 🎯 Mimo 音频标签可配置**
+
+* 新增 `mimo_audio_tags` 字段，可增减标签列表。
+
+**4. 🎯 Mimo 合并格式支持**
+
+* 多风格可写在同一对括号内，如 `(温柔 甜美)`。
+
+**5. 🔧 多项 Bug 修复**
+
+* MiniMax URL 下载死锁、临时文件无限积累、提供商类型检测、未知音频格式误判等问题。
+
+---
+
+## v1.0.0
+
+**🎉 初始发布**
+
+* 🎭 **多提供商 TTS** — 硅基流动（CosyVoice2）、MiniMax（speech-2.8）、小米 Mimo（音色复刻）
+* 🎨 **风格标签系统** — LLM 自动嵌入风格标签，TTS 提供商原生解析
+* 👤 **多人格路由** — 不同人格绑定不同提供商 / 音色 / 风格
+* 🏊 **可视化风格池** — 每个提供商独立风格池，分类展示，支持自定义扩展
+* 🔊 **双通道文本** — TTS 文本保留标签，显示文本自动清洗
+* 🔄 **智能缓存** — 音频缓存 + 重试机制
+* 📁 **统一 Provider 接口** — 抽象基类 + 注册机制，易于扩展
