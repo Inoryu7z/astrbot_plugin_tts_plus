@@ -1,6 +1,6 @@
 [![TTS Plus Counter](https://count.getloli.com/get/@Inoryu7z.tts_plus?theme=miku)](https://github.com/Inoryu7z/astrbot_plugin_tts_plus)
 
-# 🫧 巴巴啵一 | astrbot_plugin_tts_plus
+# 🫧 TTS Plus · 巴巴啵一
 
 让 AI 的回复开口说话——带着情绪、风格和个性。
 
@@ -12,7 +12,9 @@
 
 每个人格可以独立绑定不同的提供商、音色、风格和语速。
 
-## 🎛️ 命令
+---
+
+## 🎮 可用指令
 
 | 命令 | 说明 |
 |------|------|
@@ -52,6 +54,12 @@ TTS 文本：(叹气)唉，今天好累啊……  →  Mimo 解析为叹气 + �
 
 完整配置项请查阅 AstrBot 配置界面。
 
-## 📄 许可证
+## 📝 版本记录
 
-MIT License
+详细更新见 `CHANGELOG.md`。
+
+---
+
+## 📜 开源协议
+
+本项目基于 [MIT License](LICENSE) 开源。
