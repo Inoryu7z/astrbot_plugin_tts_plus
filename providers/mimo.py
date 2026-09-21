@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional
 from astrbot.api import logger
 
 from .base import BaseTTSProvider, register_provider
+from ..breaker import get_breaker
 from ..utils import compute_cache_key, validate_audio_file, retry_with_backoff, get_audio_mime
 
 
@@ -27,6 +28,8 @@ class MimoTTS(BaseTTSProvider):
         self.timeout = float(config.get("timeout", 30.0) or 30.0)
         self._voice_sample_b64: Optional[str] = None
         self._voice_sample_mime: Optional[str] = None
+        self.rl_penalty_seconds = float(config.get("rl_penalty_seconds", 60.0) or 60.0)
+        self.retry_on_429 = bool(config.get("retry_on_429", False))
 
     def set_voice_sample(self, b64_data: str, mime_type: str = "audio/mpeg"):
         self._voice_sample_b64 = b64_data
@@ -70,6 +73,13 @@ class MimoTTS(BaseTTSProvider):
         messages = self._build_messages(tts_text, style_tags)
         audio_cfg = self._build_audio_config()
 
+        if self._requires_voice_sample() and not audio_cfg.get("voice"):
+            logger.warning(
+                "[TTS+] Mimo 未配置音色样本，voice clone 模型必然被服务端拒绝(400)，"
+                "已跳过本次请求以避免浪费账号配额"
+            )
+            return None
+
         payload = {
             "model": self.model,
             "messages": messages,
@@ -82,9 +92,23 @@ class MimoTTS(BaseTTSProvider):
             "Content-Type": "application/json",
         }
 
+        breaker = get_breaker()
+        quota_key = f"{self.api_key}@{self.api_url}"
+
+        if breaker.is_open(quota_key):
+            logger.warning(
+                f"[TTS+] Mimo 跳过本次合成（限流熔断中，剩余 "
+                f"{breaker.remaining(quota_key):.0f}s），不消耗账号配额"
+            )
+            return None
+
         async def _do_request():
             session = self._get_session()
             async with session.post(url, json=payload, headers=headers, timeout=self.timeout) as resp:
+                if resp.status == 429:
+                    breaker.trip(
+                        quota_key, self._resolve_penalty(resp.headers.get("Retry-After"))
+                    )
                 if resp.status != 200:
                     error_text = await resp.text()
                     exc = Exception(f"Mimo API error {resp.status}: {error_text[:500]}")
@@ -93,12 +117,33 @@ class MimoTTS(BaseTTSProvider):
                 resp_json = await resp.json()
                 return self._handle_response(resp_json, out_path)
 
+        retryable = {500, 502, 503, 504}
+        if self.retry_on_429:
+            retryable.add(429)
+
         try:
-            result = await retry_with_backoff(_do_request, max_retries=self.max_retries, label="Mimo")
+            result = await retry_with_backoff(
+                _do_request,
+                max_retries=self.max_retries,
+                label="Mimo",
+                retryable_status=retryable,
+            )
             return result
         except Exception as e:
             logger.error(f"[TTS+] Mimo 合成失败: {e}")
             return None
+
+    def _requires_voice_sample(self) -> bool:
+        return "voiceclone" in str(self.model).lower()
+
+    def _resolve_penalty(self, retry_after: Optional[str]) -> float:
+        base = max(self.rl_penalty_seconds, 0.0)
+        if retry_after:
+            try:
+                return max(base, float(str(retry_after).strip()))
+            except (TypeError, ValueError):
+                pass
+        return base
 
     def _handle_response(self, resp_json: Dict[str, Any], out_path: Path) -> Optional[Path]:
         choices = resp_json.get("choices", [])

@@ -19,7 +19,20 @@ class ConfigManager:
     def _cfg(self, key: str, default=None):
         return self._config.get(key, default)
 
+    def get_rate_limit_defaults(self) -> Dict[str, Any]:
+        """限流相关参数。
+
+        只保留响应式退让所需的项：撞到 429 后暂停多久，以及 429 是否重试。
+        不设本地频率预算 —— 配额是账号维度的，单进程无从得知其他 Bot 的用量，
+        任何本地写死的频控都会误伤本可以成功的请求，交给服务端的 429 来判断。
+        """
+        return {
+            "rl_penalty_seconds": float(self._cfg("rl_penalty_seconds", 60.0) or 60.0),
+            "retry_on_429": bool(self._cfg("retry_on_429", False)),
+        }
+
     def get_provider_configs(self) -> Dict[str, Dict[str, Any]]:
+        defaults = self.get_rate_limit_defaults()
         result = {}
         providers = self._cfg("providers", [])
         if isinstance(providers, list):
@@ -29,6 +42,8 @@ class ConfigManager:
                 pid = str(p.get("id", "")).strip()
                 if not pid:
                     continue
+                for key, val in defaults.items():
+                    p.setdefault(key, val)
                 result[pid] = p
 
         for idx in range(1, 4):
@@ -37,6 +52,8 @@ class ConfigManager:
             if isinstance(cfg, dict):
                 cfg = dict(cfg)
                 cfg["provider_type"] = "mimo"
+                for dkey, val in defaults.items():
+                    cfg.setdefault(dkey, val)
                 pid = str(cfg.get("id", key)).strip() or key
                 result[pid] = cfg
 
