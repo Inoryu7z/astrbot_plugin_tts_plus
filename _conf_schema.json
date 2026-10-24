@@ -284,8 +284,8 @@
         }
       },
       "bailian": {
-        "name": "阿里云百炼 CosyVoice",
-        "description": "CosyVoice 非实时合成（cosyvoice-v3.5-plus 等），音色需先在百炼控制台复刻并拿到 voice_id",
+        "name": "阿里云百炼 TTS",
+        "description": "百炼非实时合成（CosyVoice / Qwen-Audio-TTS），音色需先在百炼控制台复刻并拿到 voice_id",
         "items": {
           "id": {
             "type": "string",
@@ -319,15 +319,16 @@
               "cosyvoice-v3.5-flash",
               "cosyvoice-v3-plus",
               "cosyvoice-v3-flash",
-              "cosyvoice-v2"
+              "cosyvoice-v2",
+              "qwen-audio-3.0-tts-plus"
             ],
             "default": "cosyvoice-v3.5-plus",
-            "hint": "必须与复刻音色时选择的「目标模型」一致，否则服务端拒绝。"
+            "hint": "必须与复刻音色时选择的「目标模型」一致，否则服务端拒绝。CosyVoice 与 Qwen-Audio-TTS 的复刻音色互不通用。"
           },
           "voice": {
             "type": "string",
             "description": "音色 ID",
-            "hint": "百炼控制台「声音复刻」创建音色后返回的 voice_id（形如 cosyvoice-v3.5-plus-bot-xxxx）。也可填系统音色（如 longanyang）直接试听。",
+            "hint": "百炼控制台「声音复刻」创建音色后返回的 voice_id（形如 cosyvoice-v3.5-plus-bot-xxxx、qwen-audio-3.0-tts-plus-bot-xxxx）。也可填系统音色（如 longanyang）直接试听。",
             "default": "",
             "obvious_hint": true
           },

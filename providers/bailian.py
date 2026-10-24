@@ -13,14 +13,15 @@ from ..utils import compute_cache_key, validate_audio_file, retry_with_backoff
 
 @register_provider("bailian")
 class BailianTTS(BaseTTSProvider):
-    """阿里云百炼 CosyVoice 非实时语音合成。
+    """阿里云百炼非实时语音合成（CosyVoice / Qwen-Audio-TTS 共用同一套接口）。
 
     音色由用户在百炼控制台「声音复刻」里自行创建，插件只负责拿 voice_id 合成。
     复刻音色与创建时指定的 target_model 绑定，所以 model 必须与建音色时的目标模型一致，
-    否则服务端直接拒绝（这不是插件能兜底的，配置填错就报错）。
+    CosyVoice 与 Qwen-Audio-TTS 的复刻音色也互不通用，配错服务端直接拒绝。
 
-    CosyVoice 没有 Qwen-Audio-TTS 那套 [excited] / (叹气) 文本标签，
-    情感、方言只能通过 input.instruction 的自然语言指令控制，因此本 provider 不参与风格标签体系。
+    情感/方言统一走 input.instruction（两个模型族都支持）。
+    Qwen-Audio-TTS 虽然支持 [excited] 这类文本标签，但插件不注入、不剥离它们，
+    要覆盖到显示文本上就得改公共标签管线，不在本次范围内。
     """
 
     provider_name = "bailian"

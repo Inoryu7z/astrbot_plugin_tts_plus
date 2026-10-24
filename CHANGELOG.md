@@ -1,5 +1,15 @@
 # Changelog
 
+## v1.4.1
+
+**🔊 百炼提供商支持 Qwen-Audio-TTS**
+
+* 合成模型新增 `qwen-audio-3.0-tts-plus`，与 CosyVoice 共用同一套请求、下载与缓存逻辑。
+* 复刻音色与模型族绑定：CosyVoice 的音色不能用于 Qwen-Audio-TTS，反之同理。
+* 情感、方言仍通过 `instruction` 控制；Qwen-Audio-TTS 的 `[excited]` 类文本标签暂不接入插件的标签管线。
+
+---
+
 ## v1.4.0
 
 **☁️ 新增阿里云百炼 CosyVoice 提供商**
