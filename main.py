@@ -26,8 +26,8 @@ from .utils import clean_temp_dir, compute_cache_key
 @register(
     "astrbot_plugin_tts_plus",
     "Inoryu7z",
-    "多提供商 TTS 语音合成插件，支持硅基流动、MiniMax、小米 Mimo，多人格风格路由",
-    "1.3.1",
+    "多提供商 TTS 语音合成插件，支持硅基流动、MiniMax、小米 Mimo、阿里云百炼 CosyVoice，多人格风格路由",
+    "1.4.0",
 )
 class TTSPlusPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig):
@@ -55,6 +55,8 @@ class TTSPlusPlugin(Star):
                     provider_type = "minimax"
                 elif "xiaomimimo" in api_url:
                     provider_type = "mimo"
+                elif "dashscope" in api_url or "maas.aliyuncs.com" in api_url:
+                    provider_type = "bailian"
 
             cls = get_provider_class(provider_type)
             if cls is None:

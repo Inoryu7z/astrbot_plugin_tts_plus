@@ -1,5 +1,32 @@
 # Changelog
 
+## v1.4.0
+
+**☁️ 新增阿里云百炼 CosyVoice 提供商**
+
+**1. 🎙️ 接入百炼非实时语音合成**
+
+* 新增提供商类型 `bailian`，支持 `cosyvoice-v3.5-plus` / `cosyvoice-v3.5-flash` / `cosyvoice-v3-plus` / `cosyvoice-v3-flash` / `cosyvoice-v2`。
+* 走 `SpeechSynthesizer` 接口，返回的音频链接（24 小时有效）立即下载落盘，与本地缓存复用同一套逻辑。
+* 可配 `api_url`（默认 `https://dashscope.aliyuncs.com`，支持业务空间专属域名）、`format`、`sample_rate`、`volume`、`rate`、`pitch`、`instruction`、`language_hints`。
+* 人格级 `speed` 映射为 `rate`，自动收进接口允许的 0.5–2.0。
+
+**2. 🎭 音色自行复刻**
+
+* 在百炼控制台「声音复刻」用样本音频创建音色（目标模型选准备使用的 `cosyvoice-*`），把返回的 `voice_id` 填进提供商配置的 `voice` 字段。
+* `model` 必须与复刻时的目标模型一致，否则服务端拒绝；插件不代建音色、不在本地缓存任何音色。
+* 未填 `voice` 或未填 `api_key` 时直接跳过合成，不发必然失败的请求。
+
+**3. 🗣️ 情感与方言走 instruction**
+
+* 该提供商不使用文本风格标签，情感、方言用每条提供商一句自然语言 `instruction` 控制，如「用温柔撒娇的语气说」。
+
+**4. 🐛 响应结构异常不再重试**
+
+* HTTP 200 但取不到 `output.audio.url` 时直接失败，不再重放三次。
+
+---
+
 ## v1.3.1
 
 **🛡️ Mimo 语音限流处理优化**

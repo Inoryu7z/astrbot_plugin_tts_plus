@@ -282,6 +282,101 @@
             }
           }
         }
+      },
+      "bailian": {
+        "name": "阿里云百炼 CosyVoice",
+        "description": "CosyVoice 非实时合成（cosyvoice-v3.5-plus 等），音色需先在百炼控制台复刻并拿到 voice_id",
+        "items": {
+          "id": {
+            "type": "string",
+            "description": "提供商 ID（唯一）",
+            "default": "bailian"
+          },
+          "provider_type": {
+            "type": "string",
+            "description": "提供商类型（勿改）",
+            "default": "bailian",
+            "obvious_hint": true
+          },
+          "api_url": {
+            "type": "string",
+            "description": "API 地址",
+            "hint": "默认 https://dashscope.aliyuncs.com。使用业务空间专属域名时填 https://{WorkspaceId}.cn-beijing.maas.aliyuncs.com",
+            "default": "https://dashscope.aliyuncs.com"
+          },
+          "api_key": {
+            "type": "string",
+            "description": "API Key",
+            "hint": "百炼的 DashScope API Key。需与 api_url 同地域。",
+            "default": "",
+            "obvious_hint": true
+          },
+          "model": {
+            "type": "string",
+            "description": "合成模型",
+            "options": [
+              "cosyvoice-v3.5-plus",
+              "cosyvoice-v3.5-flash",
+              "cosyvoice-v3-plus",
+              "cosyvoice-v3-flash",
+              "cosyvoice-v2"
+            ],
+            "default": "cosyvoice-v3.5-plus",
+            "hint": "必须与复刻音色时选择的「目标模型」一致，否则服务端拒绝。"
+          },
+          "voice": {
+            "type": "string",
+            "description": "音色 ID",
+            "hint": "百炼控制台「声音复刻」创建音色后返回的 voice_id（形如 cosyvoice-v3.5-plus-bot-xxxx）。也可填系统音色（如 longanyang）直接试听。",
+            "default": "",
+            "obvious_hint": true
+          },
+          "format": {
+            "type": "string",
+            "description": "音频格式",
+            "options": [
+              "mp3",
+              "wav"
+            ],
+            "default": "mp3"
+          },
+          "sample_rate": {
+            "type": "int",
+            "description": "采样率",
+            "hint": "8000 / 12000 / 16000 / 22050 / 24000 / 44100 / 48000",
+            "default": 24000
+          },
+          "volume": {
+            "type": "int",
+            "description": "音量",
+            "hint": "0-100，默认 50",
+            "default": 50
+          },
+          "rate": {
+            "type": "float",
+            "description": "语速",
+            "hint": "0.5-2.0，默认 1.0。人格级 speed 会覆盖此项。",
+            "default": 1.0
+          },
+          "pitch": {
+            "type": "float",
+            "description": "音调",
+            "hint": "0.5-2.0，默认 1.0",
+            "default": 1.0
+          },
+          "instruction": {
+            "type": "string",
+            "description": "指令（情感/方言）",
+            "hint": "自然语言指令，如「用温柔撒娇的语气说」「请用四川话表达」。留空则不传。",
+            "default": ""
+          },
+          "language_hints": {
+            "type": "string",
+            "description": "合成语言",
+            "hint": "zh / en / ja 等，留空不下发。仅当数字、符号、小语种读法异常时才需要。",
+            "default": ""
+          }
+        }
       }
     }
   },
@@ -442,7 +537,7 @@
       "provider_id": {
         "type": "string",
         "description": "TTS 提供商 ID",
-        "hint": "填写提供商 ID（如 siliconflow、minimax、mimotts_1、mimotts_2、mimotts_3）。",
+        "hint": "填写提供商 ID（如 siliconflow、minimax、bailian、mimotts_1、mimotts_2、mimotts_3）。",
         "obvious_hint": true
       },
       "inject_prompt": {
@@ -489,7 +584,7 @@
       "provider_id": {
         "type": "string",
         "description": "TTS 提供商 ID",
-        "hint": "填写提供商 ID（如 siliconflow、minimax、mimotts_1、mimotts_2、mimotts_3）。",
+        "hint": "填写提供商 ID（如 siliconflow、minimax、bailian、mimotts_1、mimotts_2、mimotts_3）。",
         "obvious_hint": true
       },
       "inject_prompt": {
@@ -536,7 +631,7 @@
       "provider_id": {
         "type": "string",
         "description": "TTS 提供商 ID",
-        "hint": "填写提供商 ID（如 siliconflow、minimax、mimotts_1、mimotts_2、mimotts_3）。",
+        "hint": "填写提供商 ID（如 siliconflow、minimax、bailian、mimotts_1、mimotts_2、mimotts_3）。",
         "obvious_hint": true
       },
       "inject_prompt": {

@@ -4,11 +4,12 @@
 
 让 AI 的回复开口说话——带着情绪、风格和个性。
 
-支持三种 TTS 提供商：
+支持四种 TTS 提供商：
 
 - **硅基流动 CosyVoice2** — 7 种基础情绪标签 + 可扩展风格池
 - **MiniMax speech-2.8** — 7 种基础情绪 + 语气词控制（笑声/叹气等）
 - **小米 Mimo 音色复刻** — 上传一段音频样本克隆音色，支持叹气/笑/抽泣等非语言元素
+- **阿里云百炼 CosyVoice** — cosyvoice-v3.5-plus 等模型，音色自行在控制台复刻后填 voice_id
 
 每个人格可以独立绑定不同的提供商、音色、风格和语速。
 
@@ -39,18 +40,21 @@ TTS 文本：(叹气)唉，今天好累啊……  →  Mimo 解析为叹气 + �
 | Mimo | 全局音频标签（叹气/笑/小声等），不使用情绪标签——模型能从文字本身理解情感 |
 | 硅基流动 | `<\|HAPPY\|>` 等标签 + 可扩展风格池 |
 | MiniMax | 7 种情绪字段 + 语气词 `(laughs)` `(sighs)` + 停顿 `<#数字#>` |
+| 阿里云百炼 | 不使用文本标签，情感/方言通过 `instruction` 自然语言指令控制（每个提供商一句） |
 
 ## ⚙️ 关键配置
 
 | 配置项 | 说明 |
 |--------|------|
 | `persona_1` ~ `persona_3` | 人格槽位，绑定 `provider_id` + 设置 `speed` / `prob` / `inject_prompt` / `text_voice_output` |
-| `providers` | 硅基流动 / MiniMax 提供商列表（含风格池） |
+| `providers` | 硅基流动 / MiniMax / 阿里云百炼 提供商列表（含风格池） |
 | `mimotts_1` ~ `mimotts_3` | Mimo 槽位，每个绑定一份音色样本（mp3/wav，≤10MB） |
 | `mimo_audio_tags` | Mimo 全局音频标签列表 |
 | `siliconflow_prompt_template`<br>`minimax_prompt_template`<br>`mimo_prompt_template` | 三个提供商各自的提示词模板（Markdown 编辑器） |
 
 > v1.3.0 起 Mimo 提供商从 `providers` 列表移到顶层固定槽位，每个槽位可自定义 ID（如将 `mimotts_1` 改为 `voice_alice`），人格配置通过 `provider_id` 引用。
+
+> 阿里云百炼的音色需先在[百炼控制台](https://bailian.console.aliyun.com/)「声音复刻」创建（目标模型选准备使用的 `cosyvoice-*`），拿到 `voice_id` 后填进提供商配置；`model` 必须与复刻时的目标模型一致。
 
 完整配置项请查阅 AstrBot 配置界面。
 
